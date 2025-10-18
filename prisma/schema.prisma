@@ -1,0 +1,282 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Tokens/Assets
+model Token {
+  id          String @id @default(cuid())
+  address     String @unique
+  chainId     String
+  name        String
+  symbol      String
+  decimals    Int
+  logoUrl     String?
+  price       Decimal? @db.Decimal(20, 8)
+  coingeckoId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  jupiterBorrowMarketsSupply    JupiterBorrowMarket[] @relation("SupplyToken")
+  jupiterBorrowMarketsBorrow    JupiterBorrowMarket[] @relation("BorrowToken")
+  jupiterLendMarkets            JupiterLendMarket[] @relation("AssetToken")
+  kaminoVaultsCollateral        KaminoVault[] @relation("CollateralToken")
+  kaminoVaultsDebt              KaminoVault[] @relation("DebtToken")
+  kaminoReserves                KaminoReserve[] @relation("KaminoReserveToken")
+
+  @@map("tokens")
+}
+
+// Jupiter Lend Borrowing Markets
+model JupiterBorrowMarket {
+  id                    String @id @default(cuid())
+  address               String @unique
+  totalSupply           String @db.Text
+  totalSupplyLiquidity  String @db.Text
+  totalBorrow           String @db.Text
+  totalBorrowLiquidity  String @db.Text
+  absorbedSupply        String @db.Text
+  absorbedBorrow        String @db.Text
+  supplyRateMagnifier   String @db.Text
+  borrowRateMagnifier   String @db.Text
+  borrowFee             String @db.Text
+  collateralFactor      String @db.Text
+  liquidationThreshold  String @db.Text
+  liquidationMaxLimit   String @db.Text
+  liquidationPenalty    String @db.Text
+  withdrawalGap         String @db.Text
+  supplyRate            String @db.Text
+  supplyRateLiquidity   String @db.Text
+  borrowRate            String @db.Text
+  borrowRateLiquidity   String @db.Text
+  withdrawLimit         String @db.Text
+  withdrawableUntilLimit String @db.Text
+  withdrawable          String @db.Text
+  borrowLimit           String @db.Text
+  borrowableUntilLimit  String @db.Text
+  borrowable            String @db.Text
+  borrowLimitUtilization String @db.Text
+  minimumBorrowing      String @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  supplyTokenId String
+  supplyToken   Token @relation("SupplyToken", fields: [supplyTokenId], references: [id])
+  borrowTokenId String
+  borrowToken   Token @relation("BorrowToken", fields: [borrowTokenId], references: [id])
+
+  @@map("jupiter_borrow_markets")
+}
+
+// Jupiter Lend Lending Markets
+model JupiterLendMarket {
+  id                    String @id @default(cuid())
+  address               String @unique
+  name                  String
+  symbol                String
+  decimals              Int
+  assetAddress          String
+  totalAssets           String @db.Text
+  totalSupply           String @db.Text
+  convertToShares       String @db.Text
+  convertToAssets       String @db.Text
+  rewardsRate           String @db.Text
+  supplyRate            String @db.Text
+  totalRate             String @db.Text
+  rebalanceDifference   String @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  assetId String
+  asset   Token @relation("AssetToken", fields: [assetId], references: [id])
+
+  @@map("jupiter_lend_markets")
+}
+
+// Drift Borrow/Lend Markets
+model DriftMarket {
+  id                    String @id @default(cuid())
+  marketIndex           Int @unique
+  symbol                String
+  mint                  String
+  oracle                String
+  pubkey                String
+  totalSpotFee          String @db.Text
+  depositBalance        String @db.Text
+  borrowBalance         String @db.Text
+  cumulativeDepositInterest String @db.Text
+  cumulativeBorrowInterest String @db.Text
+  depositInterestRate   Decimal @db.Decimal(10, 6)
+  borrowInterestRate    Decimal @db.Decimal(10, 6)
+  utilizationRate       Decimal @db.Decimal(10, 6)
+  totalDeposits         Decimal @db.Decimal(20, 6)
+  totalBorrows          Decimal @db.Decimal(20, 6)
+  availableLiquidity    Decimal @db.Decimal(20, 6)
+  optimalUtilization    Decimal @db.Decimal(10, 6)
+  optimalBorrowRate     Decimal @db.Decimal(10, 6)
+  maxBorrowRate         Decimal @db.Decimal(10, 6)
+  minBorrowRate         Decimal @db.Decimal(10, 6)
+  oraclePrice           Decimal @db.Decimal(20, 6)
+  oracleConfidence      Decimal @db.Decimal(10, 6)
+  depositTokenTwap      String @db.Text
+  borrowTokenTwap       String @db.Text
+  totalFeeEarned        Decimal @db.Decimal(20, 6)
+  totalDepositsUSD      Decimal @db.Decimal(20, 6)
+  totalBorrowsUSD       Decimal @db.Decimal(20, 6)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("drift_markets")
+}
+
+// DeFiLlama Protocols
+model DeFiLlamaProtocol {
+  id              String @id @default(cuid())
+  protocolId      String @unique
+  name            String
+  category        String
+  chains          String[]
+  currentTvl      Decimal @db.Decimal(20, 6)
+  description     String? @db.Text
+  website         String?
+  twitter         String?
+  safeHarbor      Boolean @default(false)
+  github          String?
+  methodology     String? @db.Text
+  methodologyUrl  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("defillama_protocols")
+}
+
+// Kamino Multiply Vaults
+model KaminoVault {
+  id                    String @id @default(cuid())
+  marketAddress         String @unique
+  marketName            String
+  pairType              String
+  strategyType          String
+  maxLeverage           Decimal @db.Decimal(10, 2)
+  averageLeverage       Decimal @db.Decimal(10, 2)
+  totalDepositedUsd     Decimal @db.Decimal(20, 6)
+  totalBorrowedUsd      Decimal @db.Decimal(20, 6)
+  netApy                Decimal @db.Decimal(10, 6)
+  stakingApy            Decimal @db.Decimal(10, 6)
+  borrowCost            Decimal @db.Decimal(10, 6)
+  tvl                   Decimal @db.Decimal(20, 6)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  collateralTokenId String
+  collateralToken   Token @relation("CollateralToken", fields: [collateralTokenId], references: [id])
+  debtTokenId       String
+  debtToken         Token @relation("DebtToken", fields: [debtTokenId], references: [id])
+
+  @@map("kamino_vaults")
+}
+
+// Kamino Lending Markets
+model KaminoLendingMarket {
+  id              String @id @default(cuid())
+  marketAddress   String @unique
+  marketName      String
+  description     String? @db.Text
+  isCurated       Boolean @default(false)
+  isPrimary       Boolean @default(false)
+  programId       String
+  reserveCount    Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  reserves        KaminoReserve[]
+
+  @@map("kamino_lending_markets")
+}
+
+// Kamino Reserves (within lending markets)
+model KaminoReserve {
+  id                    String @id @default(cuid())
+  address               String @unique
+  symbol                String
+  name                  String
+  decimals              Int
+  mint                  String
+  supply                Decimal @db.Decimal(20, 6)
+  supplyUsd             Decimal @db.Decimal(20, 6)
+  borrow                Decimal @db.Decimal(20, 6)
+  borrowUsd             Decimal @db.Decimal(20, 6)
+  availableLiquidity    Decimal @db.Decimal(20, 6)
+  availableLiquidityUsd Decimal @db.Decimal(20, 6)
+  borrowRate            Decimal @db.Decimal(10, 6)
+  supplyRate            Decimal @db.Decimal(10, 6)
+  utilizationRate       Decimal @db.Decimal(10, 6)
+  ltv                   Decimal @db.Decimal(10, 6)
+  liquidationThreshold  Decimal @db.Decimal(10, 6)
+  liquidationPenalty    Decimal @db.Decimal(10, 6)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  marketId String
+  market   KaminoLendingMarket @relation(fields: [marketId], references: [id])
+  tokenId  String
+  token    Token @relation("KaminoReserveToken", fields: [tokenId], references: [id])
+
+  @@map("kamino_reserves")
+}
+
+// Investment Strategies (for LLM suggestions)
+model InvestmentStrategy {
+  id              String @id @default(cuid())
+  name            String @unique
+  description     String @db.Text
+  strategyType    String // e.g., "lending", "borrowing", "vault", "arbitrage"
+  riskLevel       String // e.g., "low", "medium", "high"
+  expectedApy     Decimal @db.Decimal(10, 6)
+  minInvestment   Decimal @db.Decimal(20, 6)
+  maxInvestment   Decimal? @db.Decimal(20, 6)
+  protocols       String[] // Array of protocol names
+  tokens          String[] // Array of token symbols
+  isActive        Boolean @default(true)
+  // Vector embeddings for AI similarity search
+  embedding       Unsupported("vector(1536)")? // OpenAI embedding dimension
+  riskEmbedding   Unsupported("vector(1536)")? // Risk profile embedding
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  portfolios      Portfolio[]
+
+  @@map("investment_strategies")
+}
+
+// User Portfolios (for tracking investments)
+model Portfolio {
+  id              String @id @default(cuid())
+  userId          String
+  strategyId      String
+  amount          Decimal @db.Decimal(20, 6)
+  currentValue    Decimal @db.Decimal(20, 6)
+  profitLoss      Decimal @db.Decimal(20, 6)
+  isActive        Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  strategy InvestmentStrategy @relation(fields: [strategyId], references: [id])
+
+  @@map("portfolios")
+}
