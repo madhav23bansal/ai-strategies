@@ -1,9 +1,17 @@
 import { generateObject, generateText } from 'ai';
 
+import { PerpsDataLoader } from './perps-data-loader';
 import { PrismaClient } from '@prisma/client';
 import { generateSQLQuery } from './sql-generator';
 import { getAIProvider } from './providers';
 import { z } from 'zod';
+
+// Utility function to handle BigInt serialization
+function serializeForAI(data: any): any {
+  return JSON.parse(JSON.stringify(data, (key, value) =>
+    typeof value === 'bigint' ? value.toString() : value
+  ));
+}
 
 // Strategy generation schemas
 const strategyTypeSchema = z.enum([
@@ -63,10 +71,12 @@ export type MarketAnalysis = z.infer<typeof marketAnalysisSchema>;
 export class DeFiStrategyFlow {
   private prisma: PrismaClient;
   private aiProvider: any;
+  private perpsLoader: PerpsDataLoader;
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
     this.aiProvider = getAIProvider();
+    this.perpsLoader = new PerpsDataLoader();
     
     if (!this.aiProvider) {
       throw new Error('Azure OpenAI provider not available. Please set AZURE_OPENAI_API_KEY environment variable.');
@@ -169,43 +179,60 @@ export class DeFiStrategyFlow {
    * Step 3: Analyze market data
    */
   private async analyzeMarketData(marketData: any[], userPrompt: string): Promise<MarketAnalysis> {
-        const { object: analysis } = await generateObject({
-          model: this.aiProvider.model,
-          system: `You are a senior Kamino DeFi market analyst for Lomen, an AI-powered DeFi investment platform. You have deep expertise in Kamino lending strategies and SOL ecosystem opportunities.
+    // Load current perps data for context
+    const perpsContext = await this.perpsLoader.getFormattedContext();
+    
+    const { object: analysis } = await generateObject({
+      model: this.aiProvider.model,
+      system: `You are a senior DeFi strategist for Lomen, an AI-powered DeFi investment platform. You have deep expertise in both Kamino lending strategies and Solana perpetual trading.
 
-          KAMINO STRATEGY TYPES AND ANALYSIS:
-          - LOOPING: SOL leverage strategies using Kamino lending markets for borrowing against SOL/LST collateral
-          - YIELD_FARMING: Maximizing returns through Kamino pair strategies and LST staking
-          - STABLES: Low-risk USDC/USDT strategies using Kamino stablecoin pairs
-          - SOL_STRATEGIES: SOL-focused strategies using liquid staking tokens (LSTs) and SOL pairs
-          - LST_STRATEGIES: Liquid Staking Token strategies (mSOL, JitoSOL, etc.) for enhanced yields
-          - VOLATILE_PAIRS: High-yield strategies using volatile token pairs on Kamino
-          - DIRECTIONAL: Directional strategies based on market trends and APY opportunities
+      KAMINO STRATEGY TYPES AND ANALYSIS:
+      - LOOPING: SOL leverage strategies using Kamino lending markets for borrowing against SOL/LST collateral
+      - YIELD_FARMING: Maximizing returns through Kamino pair strategies and LST staking
+      - STABLES: Low-risk USDC/USDT strategies using Kamino stablecoin pairs
+      - SOL_STRATEGIES: SOL-focused strategies using liquid staking tokens (LSTs) and SOL pairs
+      - LST_STRATEGIES: Liquid Staking Token strategies (mSOL, JitoSOL, etc.) for enhanced yields
+      - VOLATILE_PAIRS: High-yield strategies using volatile token pairs on Kamino
+      - DIRECTIONAL: Directional strategies based on market trends and APY opportunities
 
-          KAMINO DATA ANALYSIS FOCUS:
-          - Current APY rates from Kamino historical data (staking APY vs debt APY)
-          - SOL and LST performance across different timeframes (7D, 1M, 3M)
-          - Strategy type effectiveness (directional vs sol strategies)
-          - Pair type analysis (volatile vs sol pairs)
-          - Market conditions based on Kamino lending market data
-          - Risk assessment using token market cap and volume data
-          - Recommended allocation based on current Kamino opportunities
-          
-          Be specific and data-driven in your analysis. Use actual APY numbers, token data, and market conditions from the Kamino data to support your conclusions.`,
+      SOLANA PERPS TRADING EXPERTISE:
+      - DRIFT PROTOCOL: Leading decentralized perps exchange on Solana with advanced trading features
+      - TRADING STRATEGIES: Long/short positions, funding rate arbitrage, cross-margin trading, delta-neutral strategies
+      - RISK MANAGEMENT: Stop-losses, position sizing, funding rate monitoring, liquidation risk management
+
+      COMBINED STRATEGY ANALYSIS FOCUS:
+      - Current APY rates from Kamino historical data (staking APY vs debt APY)
+      - SOL and LST performance across different timeframes (7D, 1M, 3M)
+      - Strategy type effectiveness (directional vs sol strategies)
+      - Pair type analysis (volatile vs sol pairs)
+      - Market conditions based on Kamino lending market data
+      - Risk assessment using token market cap and volume data
+      - Perps trading opportunities for hedging and directional exposure
+      - Capital efficiency across both yield farming and trading strategies
+      - Recommended allocation balancing yield generation and trading components
       
+      Be specific and data-driven in your analysis. Use actual APY numbers, token data, and market conditions from the Kamino data, combined with current perps market data to support your conclusions.`,
+  
       prompt: `Analyze this market data for strategy generation:
 
       User Request: "${userPrompt}"
       
-      Market Data:
-      ${JSON.stringify(marketData, null, 2)}
+      CURRENT PERPS MARKET CONTEXT:
+      ${perpsContext}
+      
+      KAMINO LENDING MARKET DATA:
+      ${JSON.stringify(serializeForAI(marketData), null, 2)}
       
       Provide comprehensive market analysis including:
-      1. Current market conditions and opportunities (be specific about rates, TVL, etc.)
-      2. Risk assessment and scoring (based on actual data)
-      3. Recommended portfolio allocation (justify with data)
-      4. Alternative strategies to consider (based on available opportunities)
-      5. Key market trends and warnings (derived from the data)`,
+      1. Current market conditions and opportunities (be specific about rates, TVL, perps volume, etc.)
+      2. Risk assessment and scoring (based on actual data from both Kamino and perps)
+      3. Recommended portfolio allocation (justify with data from both sources)
+      4. Alternative strategies to consider (based on available opportunities in both markets)
+      5. Key market trends and warnings (derived from the combined data)
+      6. Specific perps trading opportunities based on current market data
+      7. How to combine Kamino yield strategies with perps trading for optimal returns
+      
+      IMPORTANT: Be concise and data-driven. Focus on specific numbers and actionable insights.`,
       
       schema: marketAnalysisSchema
     });
@@ -223,51 +250,71 @@ export class DeFiStrategyFlow {
     riskTolerance: 'conservative' | 'moderate' | 'aggressive',
     investmentAmount?: number
   ): Promise<InvestmentStrategy> {
-        const { object: strategy } = await generateObject({
-          model: this.aiProvider.model,
-          system: `You are a senior Kamino DeFi strategist for Lomen, an AI-powered DeFi investment platform. Create sophisticated, actionable Kamino lending strategies based on real market data.
+    // Load current perps data for strategy creation
+    const perpsContext = await this.perpsLoader.getFormattedContext();
+    
+    const { object: strategy } = await generateObject({
+      model: this.aiProvider.model,
+      system: `You are a senior DeFi strategist for Lomen, an AI-powered DeFi investment platform. Create sophisticated, actionable strategies that combine Kamino lending with Solana perpetual trading.
 
-          KAMINO STRATEGY CREATION EXPERTISE:
-          - LOOPING: Design SOL leverage strategies using Kamino lending markets for borrowing against SOL/LST collateral
-          - YIELD_FARMING: Maximize returns through Kamino pair strategies and LST staking opportunities
-          - STABLES: Create low-risk USDC/USDT strategies using Kamino stablecoin pairs
-          - SOL_STRATEGIES: SOL-focused strategies using liquid staking tokens (LSTs) and SOL pairs
-          - LST_STRATEGIES: Liquid Staking Token strategies (mSOL, JitoSOL, bbSOL, etc.) for enhanced yields
-          - VOLATILE_PAIRS: High-yield strategies using volatile token pairs on Kamino
-          - DIRECTIONAL: Directional strategies based on market trends and APY opportunities
+      KAMINO STRATEGY CREATION EXPERTISE:
+      - LOOPING: Design SOL leverage strategies using Kamino lending markets for borrowing against SOL/LST collateral
+      - YIELD_FARMING: Maximize returns through Kamino pair strategies and LST staking opportunities
+      - STABLES: Create low-risk USDC/USDT strategies using Kamino stablecoin pairs
+      - SOL_STRATEGIES: SOL-focused strategies using liquid staking tokens (LSTs) and SOL pairs
+      - LST_STRATEGIES: Liquid Staking Token strategies (mSOL, JitoSOL, bbSOL, etc.) for enhanced yields
+      - VOLATILE_PAIRS: High-yield strategies using volatile token pairs on Kamino
+      - DIRECTIONAL: Directional strategies based on market trends and APY opportunities
 
-          KAMINO STRATEGY REQUIREMENTS:
-          - Base strategy on actual Kamino market data provided
-          - Use specific APY rates, token data, and opportunities from Kamino pairs
-          - Focus on SOL and LST strategies for maximum impact
-          - Consider both staking APY and debt APY for net returns
-          - Include specific Kamino lending markets and token pairs from the data
-          - Provide clear, executable steps with proper risk management
-          - Reference actual APY numbers and market conditions from the data
+      SOLANA PERPS TRADING EXPERTISE:
+      - DRIFT PROTOCOL: Leading decentralized perps exchange on Solana with advanced trading features
+      - TRADING STRATEGIES: Long/short positions, funding rate arbitrage, cross-margin trading, delta-neutral strategies
+      - RISK MANAGEMENT: Stop-losses, position sizing, funding rate monitoring, liquidation risk management
 
-          Available Kamino data: 12 lending markets, 44+ trading pairs, 4,000+ historical APY records
-          Available tokens: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, and other LSTs`,
-      
+      COMBINED STRATEGY REQUIREMENTS:
+      - Base strategy on actual Kamino market data provided
+      - Use specific APY rates, token data, and opportunities from Kamino pairs
+      - Integrate current perps trading opportunities for directional exposure and hedging
+      - Focus on SOL and LST strategies for maximum impact
+      - Consider both staking APY and debt APY for net returns
+      - Include specific Kamino lending markets and token pairs from the data
+      - Provide clear, executable steps for both Kamino and perps platforms
+      - Reference actual APY numbers and market conditions from the data
+      - Balance yield generation with trading opportunities
+      - Include comprehensive risk management across both platforms
+      - Use current perps market data to identify specific trading opportunities
+
+      Available Kamino data: 12 lending markets, 44+ trading pairs, 4,000+ historical APY records
+      Available tokens: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, and other LSTs
+      Available perps platform: Drift Protocol (70 markets, $100M+ daily volume)`,
+    
       prompt: `Create a DeFi investment strategy based on this request: "${userPrompt}"
       
       Risk Tolerance: ${riskTolerance}
       ${investmentAmount ? `Investment Amount: $${investmentAmount}` : ''}
       
+      CURRENT PERPS MARKET CONTEXT:
+      ${perpsContext}
+      
       Market Analysis:
       ${JSON.stringify(analysis, null, 2)}
       
-      Market Data Context:
-      ${JSON.stringify(marketData, null, 2)}
+      Kamino Lending Market Data:
+      ${JSON.stringify(serializeForAI(marketData), null, 2)}
       
       Create a comprehensive strategy that:
       1. Maximizes returns while managing risk
-      2. Uses current market opportunities from the data (cite specific rates/numbers)
-      3. Provides clear execution steps
-      4. Includes proper risk management
+      2. Uses current market opportunities from both Kamino and perps data (cite specific rates/numbers)
+      3. Provides clear execution steps for both platforms
+      4. Includes proper risk management across both yield farming and trading
       5. Considers gas costs and liquidity requirements
       6. Is specific and actionable based on real data
-      7. References actual protocols and tokens from the market data`,
+      7. References actual protocols and tokens from both market data sources
+      8. Combines yield generation with specific perps trading opportunities
+      9. Includes specific perps tokens and trading strategies based on current market conditions
       
+      IMPORTANT: Keep responses concise and precise. Focus on actionable steps with specific data points. Avoid unnecessary elaboration.`,
+    
       schema: investmentStrategySchema
     });
 

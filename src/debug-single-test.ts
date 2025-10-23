@@ -162,12 +162,34 @@ async function debugSingleTest() {
       console.log(`❌ Data analysis failed:`, error);
     }
     
-    const userPrompt = "Give me SOL looping strategy to earn more";
-    console.log(`\n📝 User prompt: "${userPrompt}"`);
+    // Enhanced prompt that will use both database data and current perps data
+    const userPrompt = `Create a comprehensive DeFi strategy that maximizes returns by combining Kamino yield farming with Solana perps trading. Focus on:
+
+1. KAMINO YIELD OPPORTUNITIES:
+   - Use the database to find the highest APY pairs and lending markets
+   - Focus on SOL and LST strategies for maximum impact
+   - Consider both staking APY and debt APY for net returns
+   - Identify the best leverage opportunities
+
+2. PERPS TRADING INTEGRATION:
+   - Use current perps market data to identify trading opportunities
+   - Consider funding rate arbitrage and directional strategies
+   - Use perps for hedging and additional yield generation
+   - Focus on high-volume, liquid perps markets
+
+3. COMBINED STRATEGY:
+   - Create a balanced approach using both yield farming and trading
+   - Include specific entry/exit criteria and risk management
+   - Consider capital efficiency and gas costs
+   - Provide clear execution steps for both platforms
+
+Generate a sophisticated strategy that uses real market data from both sources to maximize returns while managing risk.`;
+
+    console.log(`\n📝 Enhanced User prompt: "${userPrompt}"`);
     
     try {
-      const result = await strategyFlow.generateStrategy(userPrompt, 'moderate', 5000);
-      console.log('🎉 Strategy generation successful!');
+      const result = await strategyFlow.generateStrategy(userPrompt, 'moderate', 10000);
+      console.log('🎉 Enhanced strategy generation successful!');
       console.log('Strategy:', JSON.stringify(result.strategy, null, 2));
     } catch (error) {
       console.log('❌ Strategy generation failed:', error);
