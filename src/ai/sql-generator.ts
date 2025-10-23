@@ -17,6 +17,7 @@ export type SQLQuery = z.infer<typeof sqlQuerySchema>;
 // Database schema context for the AI
 const DATABASE_SCHEMA = `
 -- Kamino DeFi Investment Strategies Database Schema
+-- NOTE: Perps data is handled separately via API, do NOT reference perps_markets table in SQL queries
 
 -- Tokens table - All tokens used in Kamino markets
 CREATE TABLE tokens (
@@ -187,7 +188,12 @@ export async function generateSQLQuery(userQuery: string): Promise<SQLQuery> {
       - tokens (collateral and debt token details)
       - kamino_lending_markets (market information)
       - kamino_historical_apy (APY data)
-      - kamino_filter_types (pair categorization)`,
+      - kamino_filter_types (pair categorization)
+      
+      IMPORTANT: 
+      - Do NOT reference perps_markets table - perps data is handled separately via API
+      - Use $1, $2, $3 for parameters instead of :param_name syntax
+      - Use PostgreSQL syntax compatible with Prisma`,
       
       schema: sqlQuerySchema,
     });

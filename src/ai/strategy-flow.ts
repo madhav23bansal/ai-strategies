@@ -28,24 +28,24 @@ const strategyTypeSchema = z.enum([
 ]);
 
 const investmentStrategySchema = z.object({
-  name: z.string().describe('Strategy name'),
-  description: z.string().describe('Detailed strategy description'),
+  name: z.string().describe('Brief strategy name (max 5 words)'),
+  description: z.string().describe('Brief strategy description (max 2 sentences)'),
   strategyType: strategyTypeSchema,
   riskLevel: z.enum(['low', 'medium', 'high', 'very_high']),
   expectedApy: z.number().describe('Expected APY percentage'),
   minInvestment: z.number().describe('Minimum investment amount in USD'),
   maxInvestment: z.number().optional().describe('Maximum investment amount in USD'),
-  protocols: z.array(z.string()).describe('Protocols involved'),
-  tokens: z.array(z.string()).describe('Tokens involved'),
-  steps: z.array(z.string()).describe('Step-by-step execution instructions'),
-  risks: z.array(z.string()).describe('Key risks to consider'),
-  monitoring: z.array(z.string()).describe('What to monitor'),
-  exitStrategy: z.string().describe('When and how to exit'),
+  protocols: z.array(z.string()).describe('Protocols involved (max 5)'),
+  tokens: z.array(z.string()).describe('Tokens involved (max 8)'),
+  steps: z.array(z.string()).describe('Brief step-by-step instructions (max 8 steps, 1 sentence each)'),
+  risks: z.array(z.string()).describe('Key risks (max 5, 1 sentence each)'),
+  monitoring: z.array(z.string()).describe('What to monitor (max 5, 1 sentence each)'),
+  exitStrategy: z.string().describe('Exit strategy (max 2 sentences)'),
   capitalEfficiency: z.number().min(0).max(100).describe('Capital efficiency score (0-100)'),
   complexity: z.number().min(1).max(10).describe('Complexity level (1-10)'),
   timeHorizon: z.enum(['short', 'medium', 'long']).describe('Recommended time horizon'),
-  gasCosts: z.string().describe('Estimated gas costs'),
-  liquidity: z.string().describe('Liquidity requirements')
+  gasCosts: z.string().describe('Estimated gas costs (max 1 sentence)'),
+  liquidity: z.string().describe('Liquidity requirements (max 1 sentence)')
 });
 
 const sqlQuerySchema = z.object({
@@ -55,13 +55,13 @@ const sqlQuerySchema = z.object({
 });
 
 const marketAnalysisSchema = z.object({
-  marketConditions: z.string().describe('Current market conditions analysis'),
+  marketConditions: z.string().describe('Brief market conditions (max 2 sentences)'),
   opportunityScore: z.number().min(0).max(100).describe('Opportunity score (0-100)'),
   riskScore: z.number().min(0).max(100).describe('Risk score (0-100)'),
-  recommendedAllocation: z.string().describe('Recommended portfolio allocation'),
-  alternatives: z.array(z.string()).describe('Alternative strategies to consider'),
-  marketTrends: z.array(z.string()).describe('Relevant market trends'),
-  warnings: z.array(z.string()).describe('Important warnings and considerations')
+  recommendedAllocation: z.string().describe('Portfolio allocation (max 1 sentence)'),
+  alternatives: z.array(z.string()).describe('Alternative strategies (max 3, 1 sentence each)'),
+  marketTrends: z.array(z.string()).describe('Market trends (max 3, 1 sentence each)'),
+  warnings: z.array(z.string()).describe('Key warnings (max 3, 1 sentence each)')
 });
 
 export type InvestmentStrategy = z.infer<typeof investmentStrategySchema>;
@@ -213,26 +213,19 @@ export class DeFiStrategyFlow {
       
       Be specific and data-driven in your analysis. Use actual APY numbers, token data, and market conditions from the Kamino data, combined with current perps market data to support your conclusions.`,
   
-      prompt: `Analyze this market data for strategy generation:
-
-      User Request: "${userPrompt}"
+      prompt: `BRIEF market analysis for: "${userPrompt}"
       
-      CURRENT PERPS MARKET CONTEXT:
-      ${perpsContext}
+      PERPS: ${perpsContext}
       
-      KAMINO LENDING MARKET DATA:
-      ${JSON.stringify(serializeForAI(marketData), null, 2)}
+      KAMINO: ${JSON.stringify(serializeForAI(marketData), null, 2)}
       
-      Provide comprehensive market analysis including:
-      1. Current market conditions and opportunities (be specific about rates, TVL, perps volume, etc.)
-      2. Risk assessment and scoring (based on actual data from both Kamino and perps)
-      3. Recommended portfolio allocation (justify with data from both sources)
-      4. Alternative strategies to consider (based on available opportunities in both markets)
-      5. Key market trends and warnings (derived from the combined data)
-      6. Specific perps trading opportunities based on current market data
-      7. How to combine Kamino yield strategies with perps trading for optimal returns
+      Provide SHORT analysis:
+      • Market conditions (2 sentences max)
+      • Opportunity/risk scores (0-100)
+      • Portfolio allocation (1 sentence)
+      • 3 alternatives, 3 trends, 3 warnings (1 sentence each)
       
-      IMPORTANT: Be concise and data-driven. Focus on specific numbers and actionable insights.`,
+      CRITICAL: BE BRIEF. NO LONG PARAGRAPHS.`,
       
       schema: marketAnalysisSchema
     });
@@ -288,32 +281,24 @@ export class DeFiStrategyFlow {
       Available tokens: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, and other LSTs
       Available perps platform: Drift Protocol (70 markets, $100M+ daily volume)`,
     
-      prompt: `Create a DeFi investment strategy based on this request: "${userPrompt}"
+      prompt: `Create a BRIEF DeFi strategy for: "${userPrompt}"
       
-      Risk Tolerance: ${riskTolerance}
-      ${investmentAmount ? `Investment Amount: $${investmentAmount}` : ''}
+      Risk: ${riskTolerance} | Investment: ${investmentAmount ? `$${investmentAmount}` : 'Flexible'}
       
-      CURRENT PERPS MARKET CONTEXT:
-      ${perpsContext}
+      PERPS DATA: ${perpsContext}
       
-      Market Analysis:
-      ${JSON.stringify(analysis, null, 2)}
+      KAMINO DATA: ${JSON.stringify(serializeForAI(marketData), null, 2)}
       
-      Kamino Lending Market Data:
-      ${JSON.stringify(serializeForAI(marketData), null, 2)}
+      ANALYSIS: ${JSON.stringify(analysis, null, 2)}
       
-      Create a comprehensive strategy that:
-      1. Maximizes returns while managing risk
-      2. Uses current market opportunities from both Kamino and perps data (cite specific rates/numbers)
-      3. Provides clear execution steps for both platforms
-      4. Includes proper risk management across both yield farming and trading
-      5. Considers gas costs and liquidity requirements
-      6. Is specific and actionable based on real data
-      7. References actual protocols and tokens from both market data sources
-      8. Combines yield generation with specific perps trading opportunities
-      9. Includes specific perps tokens and trading strategies based on current market conditions
+      REQUIREMENTS:
+      • Use real data from both sources
+      • Keep responses SHORT and DIRECT
+      • Max 8 steps, 5 risks, 5 monitoring items
+      • Use bullet points and short sentences
+      • Focus on key numbers and essential actions only
       
-      IMPORTANT: Keep responses concise and precise. Focus on actionable steps with specific data points. Avoid unnecessary elaboration.`,
+      CRITICAL: BE BRIEF. NO LONG PARAGRAPHS.`,
     
       schema: investmentStrategySchema
     });

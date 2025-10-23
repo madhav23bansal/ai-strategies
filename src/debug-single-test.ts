@@ -162,28 +162,8 @@ async function debugSingleTest() {
       console.log(`❌ Data analysis failed:`, error);
     }
     
-    // Enhanced prompt that will use both database data and current perps data
-    const userPrompt = `Create a comprehensive DeFi strategy that maximizes returns by combining Kamino yield farming with Solana perps trading. Focus on:
-
-1. KAMINO YIELD OPPORTUNITIES:
-   - Use the database to find the highest APY pairs and lending markets
-   - Focus on SOL and LST strategies for maximum impact
-   - Consider both staking APY and debt APY for net returns
-   - Identify the best leverage opportunities
-
-2. PERPS TRADING INTEGRATION:
-   - Use current perps market data to identify trading opportunities
-   - Consider funding rate arbitrage and directional strategies
-   - Use perps for hedging and additional yield generation
-   - Focus on high-volume, liquid perps markets
-
-3. COMBINED STRATEGY:
-   - Create a balanced approach using both yield farming and trading
-   - Include specific entry/exit criteria and risk management
-   - Consider capital efficiency and gas costs
-   - Provide clear execution steps for both platforms
-
-Generate a sophisticated strategy that uses real market data from both sources to maximize returns while managing risk.`;
+    // Simple prompt to test brief responses
+    const userPrompt = `Create a brief DeFi strategy combining Kamino yield farming with Drift perps trading for $10k investment.`;
 
     console.log(`\n📝 Enhanced User prompt: "${userPrompt}"`);
     
