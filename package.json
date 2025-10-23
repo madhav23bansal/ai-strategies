@@ -17,7 +17,12 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:setup": "ts-node src/scripts/setup-database.ts",
+    "db:seed-kamino": "ts-node src/scripts/seed-kamino-data.ts",
+    "db:test": "ts-node src/scripts/test-database.ts",
+    "fetch:kamino": "ts-node src/scripts/get-kamino-leverage-data.ts",
+    "fetch:apy": "ts-node src/scripts/fetch-historical-apy.ts"
   },
   "keywords": [],
   "author": "",
@@ -36,6 +41,7 @@
     "@types/express": "^5.0.3",
     "@types/morgan": "^1.9.10",
     "ai": "^5.0.60",
+    "axios": "^1.12.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "helmet": "^8.1.0",

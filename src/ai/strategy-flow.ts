@@ -1,6 +1,7 @@
 import { generateObject, generateText } from 'ai';
 
 import { PrismaClient } from '@prisma/client';
+import { generateSQLQuery } from './sql-generator';
 import { getAIProvider } from './providers';
 import { z } from 'zod';
 
@@ -121,308 +122,20 @@ export class DeFiStrategyFlow {
    * Step 1: Generate SQL queries based on user prompt
    */
   private async generateSQLQueries(userPrompt: string): Promise<SQLQuery[]> {
-        const { object: queries } = await generateObject({
-          model: this.aiProvider.model,
-          system: `You are an expert DeFi strategist and data analyst for Lomen, a sophisticated DeFi investment platform. 
-
-          PRODUCT CONTEXT:
-          Lomen is an AI-powered DeFi investment platform that helps users discover and execute profitable DeFi strategies. Our platform analyzes real-time market data from multiple protocols (Jupiter, Drift, Kamino, DeFiLlama) to generate personalized investment strategies.
-
-          AVAILABLE STRATEGY TYPES AND THEIR MEANINGS:
-          1. STABLES - Low-risk strategies focused on stablecoins (USDC, USDT) with yield farming, lending, and liquidity provision
-          2. LOOPING - Leverage strategies where users borrow against collateral to increase exposure and potential returns
-          3. YIELD_FARMING - Strategies that maximize returns through liquidity provision, staking, and reward token farming
-          4. MULTI_PROTOCOL - Cross-protocol arbitrage and yield optimization strategies
-          5. AIRDROP - Strategies focused on earning protocol tokens through participation and farming
-          6. PAIR_TRADING - Market-neutral strategies involving correlated token pairs
-          7. LIQUIDATION_ARBITRAGE - Strategies that profit from liquidation events and market inefficiencies
-          8. LEVERAGE_FARMING - High-leverage strategies using borrowed funds for farming
-          9. CROSS_CHAIN - Strategies involving multiple blockchain networks
-          10. VOLATILITY_TRADING - Strategies that profit from price volatility and market movements
-
-          DATABASE SCHEMA:
+    try {
+      // Use the SQL generator to create a single comprehensive query
+      const sqlQuery = await generateSQLQuery(userPrompt);
       
-      -- Tokens/Assets
-      CREATE TABLE tokens (
-        id          TEXT PRIMARY KEY,
-        address     TEXT UNIQUE NOT NULL,
-        chainId     TEXT NOT NULL,
-        name        TEXT NOT NULL,
-        symbol      TEXT NOT NULL,
-        decimals    INTEGER NOT NULL,
-        logoUrl     TEXT,
-        price       DECIMAL(20,8),
-        coingeckoId TEXT,
-        createdAt   TIMESTAMP DEFAULT NOW(),
-        updatedAt   TIMESTAMP DEFAULT NOW()
-      );
-
-      -- Jupiter Lend Borrowing Markets
-      CREATE TABLE jupiter_borrow_markets (
-        id                    TEXT PRIMARY KEY,
-        address               TEXT UNIQUE NOT NULL,
-        "totalSupply"         TEXT NOT NULL,
-        "totalSupplyLiquidity" TEXT NOT NULL,
-        "totalBorrow"         TEXT NOT NULL,
-        "totalBorrowLiquidity" TEXT NOT NULL,
-        "absorbedSupply"      TEXT NOT NULL,
-        "absorbedBorrow"      TEXT NOT NULL,
-        "supplyRateMagnifier" TEXT NOT NULL,
-        "borrowRateMagnifier" TEXT NOT NULL,
-        "borrowFee"           TEXT NOT NULL,
-        "collateralFactor"    TEXT NOT NULL,
-        "liquidationThreshold" TEXT NOT NULL,
-        "liquidationMaxLimit" TEXT NOT NULL,
-        "liquidationPenalty"  TEXT NOT NULL,
-        "withdrawalGap"       TEXT NOT NULL,
-        "supplyRate"          TEXT NOT NULL,
-        "supplyRateLiquidity" TEXT NOT NULL,
-        "borrowRate"          TEXT NOT NULL,
-        "borrowRateLiquidity" TEXT NOT NULL,
-        "withdrawLimit"       TEXT NOT NULL,
-        "withdrawableUntilLimit" TEXT NOT NULL,
-        withdrawable          TEXT NOT NULL,
-        "borrowLimit"         TEXT NOT NULL,
-        "borrowableUntilLimit" TEXT NOT NULL,
-        borrowable            TEXT NOT NULL,
-        "borrowLimitUtilization" TEXT NOT NULL,
-        "minimumBorrowing"    TEXT NOT NULL,
-        "createdAt"           TIMESTAMP DEFAULT NOW(),
-        "updatedAt"           TIMESTAMP DEFAULT NOW(),
-        "supplyTokenId"       TEXT REFERENCES tokens(id),
-        "borrowTokenId"       TEXT REFERENCES tokens(id)
-      );
-
-      -- Jupiter Lend Lending Markets
-      CREATE TABLE jupiter_lend_markets (
-        id                    TEXT PRIMARY KEY,
-        address               TEXT UNIQUE NOT NULL,
-        name                  TEXT NOT NULL,
-        symbol                TEXT NOT NULL,
-        decimals              INTEGER NOT NULL,
-        "assetAddress"        TEXT NOT NULL,
-        "totalAssets"         TEXT NOT NULL,
-        "totalSupply"         TEXT NOT NULL,
-        "convertToShares"     TEXT NOT NULL,
-        "convertToAssets"     TEXT NOT NULL,
-        "rewardsRate"         TEXT NOT NULL,
-        "supplyRate"          TEXT NOT NULL,
-        "totalRate"           TEXT NOT NULL,
-        "rebalanceDifference" TEXT NOT NULL,
-        "createdAt"           TIMESTAMP DEFAULT NOW(),
-        "updatedAt"           TIMESTAMP DEFAULT NOW(),
-        "assetId"             TEXT REFERENCES tokens(id)
-      );
-
-      -- Drift Borrow/Lend Markets
-      CREATE TABLE drift_markets (
-        id                    TEXT PRIMARY KEY,
-        "marketIndex"         INTEGER UNIQUE NOT NULL,
-        symbol                TEXT NOT NULL,
-        mint                  TEXT NOT NULL,
-        oracle                TEXT NOT NULL,
-        pubkey                TEXT NOT NULL,
-        "totalSpotFee"        TEXT NOT NULL,
-        "depositBalance"      TEXT NOT NULL,
-        "borrowBalance"       TEXT NOT NULL,
-        "cumulativeDepositInterest" TEXT NOT NULL,
-        "cumulativeBorrowInterest" TEXT NOT NULL,
-        "depositInterestRate" DECIMAL(10,6) NOT NULL,
-        "borrowInterestRate"  DECIMAL(10,6) NOT NULL,
-        "utilizationRate"     DECIMAL(10,6) NOT NULL,
-        "totalDeposits"       DECIMAL(20,6) NOT NULL,
-        "totalBorrows"        DECIMAL(20,6) NOT NULL,
-        "availableLiquidity"  DECIMAL(20,6) NOT NULL,
-        "optimalUtilization"  DECIMAL(10,6) NOT NULL,
-        "optimalBorrowRate"   DECIMAL(10,6) NOT NULL,
-        "maxBorrowRate"       DECIMAL(10,6) NOT NULL,
-        "minBorrowRate"       DECIMAL(10,6) NOT NULL,
-        "oraclePrice"         DECIMAL(20,6) NOT NULL,
-        "oracleConfidence"    DECIMAL(10,6) NOT NULL,
-        "depositTokenTwap"    TEXT NOT NULL,
-        "borrowTokenTwap"     TEXT NOT NULL,
-        "totalFeeEarned"      DECIMAL(20,6) NOT NULL,
-        "totalDepositsUSD"    DECIMAL(20,6) NOT NULL,
-        "totalBorrowsUSD"     DECIMAL(20,6) NOT NULL,
-        "createdAt"           TIMESTAMP DEFAULT NOW(),
-        "updatedAt"           TIMESTAMP DEFAULT NOW()
-      );
-
-      -- DeFiLlama Protocols
-      CREATE TABLE defillama_protocols (
-        id              TEXT PRIMARY KEY,
-        "protocolId"    TEXT UNIQUE NOT NULL,
-        name            TEXT NOT NULL,
-        category        TEXT NOT NULL,
-        chains          TEXT[] NOT NULL,
-        "currentTvl"    DECIMAL(20,6) NOT NULL,
-        description     TEXT,
-        website         TEXT,
-        twitter         TEXT,
-        "safeHarbor"    BOOLEAN DEFAULT FALSE,
-        github          TEXT,
-        methodology     TEXT,
-        "methodologyUrl" TEXT,
-        "createdAt"     TIMESTAMP DEFAULT NOW(),
-        "updatedAt"     TIMESTAMP DEFAULT NOW()
-      );
-
-      -- Kamino Multiply Vaults
-      CREATE TABLE kamino_vaults (
-        id                    TEXT PRIMARY KEY,
-        "marketAddress"       TEXT UNIQUE NOT NULL,
-        "marketName"          TEXT NOT NULL,
-        "pairType"            TEXT NOT NULL,
-        "strategyType"        TEXT NOT NULL,
-        "maxLeverage"         DECIMAL(10,2) NOT NULL,
-        "averageLeverage"     DECIMAL(10,2) NOT NULL,
-        "totalDepositedUsd"   DECIMAL(20,6) NOT NULL,
-        "totalBorrowedUsd"    DECIMAL(20,6) NOT NULL,
-        "netApy"              DECIMAL(10,6) NOT NULL,
-        "stakingApy"          DECIMAL(10,6) NOT NULL,
-        "borrowCost"          DECIMAL(10,6) NOT NULL,
-        tvl                   DECIMAL(20,6) NOT NULL,
-        "createdAt"           TIMESTAMP DEFAULT NOW(),
-        "updatedAt"           TIMESTAMP DEFAULT NOW(),
-        "collateralTokenId"   TEXT REFERENCES tokens(id),
-        "debtTokenId"         TEXT REFERENCES tokens(id)
-      );
-
-      -- Kamino Lending Markets
-      CREATE TABLE kamino_lending_markets (
-        id              TEXT PRIMARY KEY,
-        "marketAddress" TEXT UNIQUE NOT NULL,
-        "marketName"    TEXT NOT NULL,
-        description     TEXT,
-        "isCurated"     BOOLEAN DEFAULT FALSE,
-        "isPrimary"     BOOLEAN DEFAULT FALSE,
-        "programId"     TEXT NOT NULL,
-        "reserveCount"  INTEGER NOT NULL,
-        "createdAt"     TIMESTAMP DEFAULT NOW(),
-        "updatedAt"     TIMESTAMP DEFAULT NOW()
-      );
-
-      -- Kamino Reserves (within lending markets)
-      CREATE TABLE kamino_reserves (
-        id                    TEXT PRIMARY KEY,
-        address               TEXT UNIQUE NOT NULL,
-        symbol                TEXT NOT NULL,
-        name                  TEXT NOT NULL,
-        decimals              INTEGER NOT NULL,
-        mint                  TEXT NOT NULL,
-        supply                DECIMAL(20,6) NOT NULL,
-        "supplyUsd"           DECIMAL(20,6) NOT NULL,
-        borrow                DECIMAL(20,6) NOT NULL,
-        "borrowUsd"           DECIMAL(20,6) NOT NULL,
-        "availableLiquidity"  DECIMAL(20,6) NOT NULL,
-        "availableLiquidityUsd" DECIMAL(20,6) NOT NULL,
-        "borrowRate"          DECIMAL(10,6) NOT NULL,
-        "supplyRate"          DECIMAL(10,6) NOT NULL,
-        "utilizationRate"     DECIMAL(10,6) NOT NULL,
-        ltv                   DECIMAL(10,6) NOT NULL,
-        "liquidationThreshold" DECIMAL(10,6) NOT NULL,
-        "liquidationPenalty"  DECIMAL(10,6) NOT NULL,
-        "createdAt"           TIMESTAMP DEFAULT NOW(),
-        "updatedAt"           TIMESTAMP DEFAULT NOW(),
-        "marketId"            TEXT REFERENCES kamino_lending_markets(id),
-        "tokenId"             TEXT REFERENCES tokens(id)
-      );
-
-      -- Investment Strategies (for LLM suggestions)
-      CREATE TABLE investment_strategies (
-        id              TEXT PRIMARY KEY,
-        name            TEXT UNIQUE NOT NULL,
-        description     TEXT NOT NULL,
-        "strategyType"  TEXT NOT NULL,
-        "riskLevel"     TEXT NOT NULL,
-        "expectedApy"   DECIMAL(10,6) NOT NULL,
-        "minInvestment" DECIMAL(20,6) NOT NULL,
-        "maxInvestment" DECIMAL(20,6),
-        protocols       TEXT[] NOT NULL,
-        tokens          TEXT[] NOT NULL,
-        "isActive"      BOOLEAN DEFAULT TRUE,
-        "createdAt"     TIMESTAMP DEFAULT NOW(),
-        "updatedAt"     TIMESTAMP DEFAULT NOW()
-      );
-
-      -- User Portfolios (for tracking investments)
-      CREATE TABLE portfolios (
-        id              TEXT PRIMARY KEY,
-        "userId"        TEXT NOT NULL,
-        "strategyId"    TEXT REFERENCES investment_strategies(id),
-        amount          DECIMAL(20,6) NOT NULL,
-        "currentValue"  DECIMAL(20,6) NOT NULL,
-        "profitLoss"    DECIMAL(20,6) NOT NULL,
-        "isActive"      BOOLEAN DEFAULT TRUE,
-        "createdAt"     TIMESTAMP DEFAULT NOW(),
-        "updatedAt"     TIMESTAMP DEFAULT NOW()
-      );
-
-          Generate 3-5 SQL queries that will provide comprehensive market data for the user's strategy request.
-          Focus on:
-          1. Current APY rates and lending opportunities
-          2. Leverage and looping opportunities  
-          3. Protocol TVL and market size
-          4. Token prices and volatility
-          5. Cross-protocol arbitrage opportunities
-
-          Each query should be specific and actionable for DeFi strategy generation.
-          Use proper JOINs to get token information and ensure all column names match the schema exactly.
-          
-          CRITICAL: Use the exact column names from the schema above with proper quoting:
-          - Use "tokenId" not "token_id" (always quote column names with double quotes)
-          - Use "supplyRate" not "supply_rate" 
-          - Use "borrowRate" not "borrow_rate"
-          - Use "availableLiquidityUsd" not "available_liquidity_usd"
-          - Use "totalSupplyUsd" not "total_supply_usd"
-          - Use "totalBorrowUsd" not "total_borrow_usd"
-          - ALWAYS wrap column names in double quotes: "columnName" not columnName
-          
-          IMPORTANT: 
-          - All TEXT fields in the schema are stored as TEXT, so use proper casting for numeric operations
-          - Use 'WSOL' instead of 'SOL' for Solana token queries (the database contains WSOL, not SOL)
-          - Generate ONLY ONE SQL query per query object - do not include multiple SELECT statements separated by semicolons
-          - Each query should be a single, complete SELECT statement
-          - For DECIMAL casting, use appropriate precision: DECIMAL(38,12) for large numbers, DECIMAL(20,6) for rates and percentages
-          - Be aware that some tables may be empty (like kamino_reserves), so use LEFT JOINs and handle NULL values`,
-      
-      prompt: `Generate SQL queries for this DeFi strategy request: "${userPrompt}"
-      
-      As a Lomen DeFi strategist, I need to analyze the current market data to create a profitable strategy. Based on the user's request, I should focus on:
-      
-      FOR LOOPING STRATEGIES (like SOL looping):
-      - Current lending rates (supply rates) where users can earn yield
-      - Borrowing rates and costs for leverage
-      - Available liquidity and TVL for safe execution
-      - Protocol-specific opportunities (Jupiter, Drift, Kamino)
-      - Token prices and market conditions
-      
-      FOR YIELD FARMING STRATEGIES:
-      - Highest APY opportunities across protocols
-      - Liquidity pool sizes and stability
-      - Reward token distributions
-      - Risk factors and impermanent loss
-      
-      FOR STABLECOIN STRATEGIES:
-      - USDC/USDT lending rates
-      - Stablecoin-specific opportunities
-      - Risk-adjusted returns
-      
-      Generate 3-5 focused SQL queries that will provide the most relevant data for this specific strategy type.
-      
-      CRITICAL REQUIREMENTS:
-      - Use 'WSOL' instead of 'SOL' (database contains WSOL, not SOL)
-      - Always quote column names: "supplyRate" not supplyRate
-      - Use appropriate DECIMAL precision: DECIMAL(38,12) for large numbers, DECIMAL(20,6) for rates
-      - Generate ONE query per query object (no semicolons separating multiple statements)
-      - Focus on data that directly supports the requested strategy type`,
-      
-      schema: z.object({
-        queries: z.array(sqlQuerySchema).min(3).max(5)
-      })
-    });
-
-    return queries.queries;
+      // Convert the single query to the expected array format
+      return [{
+        query: sqlQuery.query,
+        description: sqlQuery.explanation,
+        tables: sqlQuery.tables
+      }];
+    } catch (error) {
+      console.error('Error generating SQL queries:', error);
+      throw new Error('Failed to generate SQL queries');
+    }
   }
 
   /**
@@ -458,28 +171,27 @@ export class DeFiStrategyFlow {
   private async analyzeMarketData(marketData: any[], userPrompt: string): Promise<MarketAnalysis> {
         const { object: analysis } = await generateObject({
           model: this.aiProvider.model,
-          system: `You are a senior DeFi market analyst for Lomen, an AI-powered DeFi investment platform. You have deep expertise in:
+          system: `You are a senior Kamino DeFi market analyst for Lomen, an AI-powered DeFi investment platform. You have deep expertise in Kamino lending strategies and SOL ecosystem opportunities.
 
-          STRATEGY TYPES AND ANALYSIS:
-          - LOOPING: Leverage strategies using borrowed funds against collateral
-          - YIELD_FARMING: Maximizing returns through liquidity provision and staking
-          - STABLES: Low-risk stablecoin strategies for conservative investors
-          - MULTI_PROTOCOL: Cross-protocol arbitrage and yield optimization
-          - AIRDROP: Protocol token earning through participation
-          - PAIR_TRADING: Market-neutral strategies with correlated pairs
-          - LIQUIDATION_ARBITRAGE: Profiting from liquidation events
-          - LEVERAGE_FARMING: High-leverage farming strategies
-          - CROSS_CHAIN: Multi-blockchain strategies
-          - VOLATILITY_TRADING: Volatility-based profit strategies
+          KAMINO STRATEGY TYPES AND ANALYSIS:
+          - LOOPING: SOL leverage strategies using Kamino lending markets for borrowing against SOL/LST collateral
+          - YIELD_FARMING: Maximizing returns through Kamino pair strategies and LST staking
+          - STABLES: Low-risk USDC/USDT strategies using Kamino stablecoin pairs
+          - SOL_STRATEGIES: SOL-focused strategies using liquid staking tokens (LSTs) and SOL pairs
+          - LST_STRATEGIES: Liquid Staking Token strategies (mSOL, JitoSOL, etc.) for enhanced yields
+          - VOLATILE_PAIRS: High-yield strategies using volatile token pairs on Kamino
+          - DIRECTIONAL: Directional strategies based on market trends and APY opportunities
 
-          ANALYSIS FOCUS:
-          - Current market conditions and opportunities (be specific about rates, TVL, etc.)
-          - Risk assessment and scoring (based on actual data)
-          - Recommended portfolio allocation (justify with data)
-          - Alternative strategies to consider (based on available opportunities)
-          - Key market trends and warnings (derived from the data)
+          KAMINO DATA ANALYSIS FOCUS:
+          - Current APY rates from Kamino historical data (staking APY vs debt APY)
+          - SOL and LST performance across different timeframes (7D, 1M, 3M)
+          - Strategy type effectiveness (directional vs sol strategies)
+          - Pair type analysis (volatile vs sol pairs)
+          - Market conditions based on Kamino lending market data
+          - Risk assessment using token market cap and volume data
+          - Recommended allocation based on current Kamino opportunities
           
-          Be specific and data-driven in your analysis. Use the actual numbers from the market data to support your conclusions.`,
+          Be specific and data-driven in your analysis. Use actual APY numbers, token data, and market conditions from the Kamino data to support your conclusions.`,
       
       prompt: `Analyze this market data for strategy generation:
 
@@ -513,29 +225,28 @@ export class DeFiStrategyFlow {
   ): Promise<InvestmentStrategy> {
         const { object: strategy } = await generateObject({
           model: this.aiProvider.model,
-          system: `You are a senior DeFi strategist for Lomen, an AI-powered DeFi investment platform. Create sophisticated, actionable investment strategies based on real market data.
+          system: `You are a senior Kamino DeFi strategist for Lomen, an AI-powered DeFi investment platform. Create sophisticated, actionable Kamino lending strategies based on real market data.
 
-          STRATEGY CREATION EXPERTISE:
-          - LOOPING: Design leverage strategies where users borrow against collateral to increase exposure
-          - YIELD_FARMING: Maximize returns through liquidity provision, staking, and reward farming
-          - STABLES: Create low-risk stablecoin strategies for conservative investors
-          - MULTI_PROTOCOL: Develop cross-protocol arbitrage and yield optimization strategies
-          - AIRDROP: Design strategies focused on earning protocol tokens
-          - PAIR_TRADING: Create market-neutral strategies with correlated token pairs
-          - LIQUIDATION_ARBITRAGE: Develop strategies that profit from liquidation events
-          - LEVERAGE_FARMING: Design high-leverage farming strategies
-          - CROSS_CHAIN: Create multi-blockchain strategies
-          - VOLATILITY_TRADING: Develop volatility-based profit strategies
+          KAMINO STRATEGY CREATION EXPERTISE:
+          - LOOPING: Design SOL leverage strategies using Kamino lending markets for borrowing against SOL/LST collateral
+          - YIELD_FARMING: Maximize returns through Kamino pair strategies and LST staking opportunities
+          - STABLES: Create low-risk USDC/USDT strategies using Kamino stablecoin pairs
+          - SOL_STRATEGIES: SOL-focused strategies using liquid staking tokens (LSTs) and SOL pairs
+          - LST_STRATEGIES: Liquid Staking Token strategies (mSOL, JitoSOL, bbSOL, etc.) for enhanced yields
+          - VOLATILE_PAIRS: High-yield strategies using volatile token pairs on Kamino
+          - DIRECTIONAL: Directional strategies based on market trends and APY opportunities
 
-          STRATEGY REQUIREMENTS:
-          - Base strategy on actual market data provided
-          - Use specific rates, TVL numbers, and opportunities from the data
-          - Provide clear, executable steps with risk management
-          - Consider current APYs, leverage opportunities, and risk factors
-          - Include specific protocols and tokens from the market data
+          KAMINO STRATEGY REQUIREMENTS:
+          - Base strategy on actual Kamino market data provided
+          - Use specific APY rates, token data, and opportunities from Kamino pairs
+          - Focus on SOL and LST strategies for maximum impact
+          - Consider both staking APY and debt APY for net returns
+          - Include specific Kamino lending markets and token pairs from the data
+          - Provide clear, executable steps with proper risk management
+          - Reference actual APY numbers and market conditions from the data
 
-          Available protocols: Jupiter Lend, Drift, Kamino, DeFiLlama
-          Available tokens: WSOL, USDC, USDT, and others from the database`,
+          Available Kamino data: 12 lending markets, 44+ trading pairs, 4,000+ historical APY records
+          Available tokens: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, and other LSTs`,
       
       prompt: `Create a DeFi investment strategy based on this request: "${userPrompt}"
       

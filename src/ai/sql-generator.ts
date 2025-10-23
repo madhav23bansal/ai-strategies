@@ -1,5 +1,5 @@
 import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { getAIProvider } from './providers';
 import { z } from 'zod';
 
 // Schema for SQL query generation
@@ -16,232 +16,178 @@ export type SQLQuery = z.infer<typeof sqlQuerySchema>;
 
 // Database schema context for the AI
 const DATABASE_SCHEMA = `
--- DeFi Investment Strategies Database Schema
+-- Kamino DeFi Investment Strategies Database Schema
 
--- Tokens table
+-- Tokens table - All tokens used in Kamino markets
 CREATE TABLE tokens (
   id TEXT PRIMARY KEY,
-  address TEXT UNIQUE NOT NULL,
-  chainId TEXT NOT NULL,
+  mint TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
   symbol TEXT NOT NULL,
   decimals INTEGER NOT NULL,
-  logoUrl TEXT,
-  price DECIMAL(20,8),
-  coingeckoId TEXT,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  "logoUrl" TEXT NOT NULL,
+  "marketCapUsd" DECIMAL(20,6) NOT NULL,
+  "volumeUsd" DECIMAL(20,6) NOT NULL,
+  verified BOOLEAN DEFAULT FALSE,
+  priority INTEGER NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
--- Jupiter Borrow Markets
-CREATE TABLE jupiter_borrow_markets (
-  id TEXT PRIMARY KEY,
-  address TEXT UNIQUE NOT NULL,
-  totalSupply TEXT NOT NULL,
-  totalSupplyLiquidity TEXT NOT NULL,
-  totalBorrow TEXT NOT NULL,
-  totalBorrowLiquidity TEXT NOT NULL,
-  absorbedSupply TEXT NOT NULL,
-  absorbedBorrow TEXT NOT NULL,
-  supplyRateMagnifier TEXT NOT NULL,
-  borrowRateMagnifier TEXT NOT NULL,
-  borrowFee TEXT NOT NULL,
-  collateralFactor TEXT NOT NULL,
-  liquidationThreshold TEXT NOT NULL,
-  liquidationMaxLimit TEXT NOT NULL,
-  liquidationPenalty TEXT NOT NULL,
-  withdrawalGap TEXT NOT NULL,
-  supplyRate TEXT NOT NULL,
-  supplyRateLiquidity TEXT NOT NULL,
-  borrowRate TEXT NOT NULL,
-  borrowRateLiquidity TEXT NOT NULL,
-  withdrawLimit TEXT NOT NULL,
-  withdrawableUntilLimit TEXT NOT NULL,
-  withdrawable TEXT NOT NULL,
-  borrowLimit TEXT NOT NULL,
-  borrowableUntilLimit TEXT NOT NULL,
-  borrowable TEXT NOT NULL,
-  borrowLimitUtilization TEXT NOT NULL,
-  minimumBorrowing TEXT NOT NULL,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW(),
-  supplyTokenId TEXT REFERENCES tokens(id),
-  borrowTokenId TEXT REFERENCES tokens(id)
-);
-
--- Jupiter Lend Markets
-CREATE TABLE jupiter_lend_markets (
-  id TEXT PRIMARY KEY,
-  address TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  symbol TEXT NOT NULL,
-  decimals INTEGER NOT NULL,
-  assetAddress TEXT NOT NULL,
-  totalAssets TEXT NOT NULL,
-  totalSupply TEXT NOT NULL,
-  convertToShares TEXT NOT NULL,
-  convertToAssets TEXT NOT NULL,
-  rewardsRate TEXT NOT NULL,
-  supplyRate TEXT NOT NULL,
-  totalRate TEXT NOT NULL,
-  rebalanceDifference TEXT NOT NULL,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW(),
-  assetId TEXT REFERENCES tokens(id)
-);
-
--- Drift Markets
-CREATE TABLE drift_markets (
-  id TEXT PRIMARY KEY,
-  marketIndex INTEGER UNIQUE NOT NULL,
-  symbol TEXT NOT NULL,
-  mint TEXT NOT NULL,
-  oracle TEXT NOT NULL,
-  pubkey TEXT NOT NULL,
-  totalSpotFee TEXT NOT NULL,
-  depositBalance TEXT NOT NULL,
-  borrowBalance TEXT NOT NULL,
-  cumulativeDepositInterest TEXT NOT NULL,
-  cumulativeBorrowInterest TEXT NOT NULL,
-  depositInterestRate DECIMAL(10,6) NOT NULL,
-  borrowInterestRate DECIMAL(10,6) NOT NULL,
-  utilizationRate DECIMAL(10,6) NOT NULL,
-  totalDeposits DECIMAL(20,6) NOT NULL,
-  totalBorrows DECIMAL(20,6) NOT NULL,
-  availableLiquidity DECIMAL(20,6) NOT NULL,
-  optimalUtilization DECIMAL(10,6) NOT NULL,
-  optimalBorrowRate DECIMAL(10,6) NOT NULL,
-  maxBorrowRate DECIMAL(10,6) NOT NULL,
-  minBorrowRate DECIMAL(10,6) NOT NULL,
-  oraclePrice DECIMAL(20,6) NOT NULL,
-  oracleConfidence DECIMAL(10,6) NOT NULL,
-  depositTokenTwap TEXT NOT NULL,
-  borrowTokenTwap TEXT NOT NULL,
-  totalFeeEarned DECIMAL(20,6) NOT NULL,
-  totalDepositsUSD DECIMAL(20,6) NOT NULL,
-  totalBorrowsUSD DECIMAL(20,6) NOT NULL,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
-);
-
--- DeFiLlama Protocols
-CREATE TABLE defillama_protocols (
-  id TEXT PRIMARY KEY,
-  protocolId TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  category TEXT NOT NULL,
-  chains TEXT[] NOT NULL,
-  currentTvl DECIMAL(20,6) NOT NULL,
-  description TEXT,
-  website TEXT,
-  twitter TEXT,
-  safeHarbor BOOLEAN DEFAULT FALSE,
-  github TEXT,
-  methodology TEXT,
-  methodologyUrl TEXT,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
-);
-
--- Kamino Multiply Vaults
-CREATE TABLE kamino_vaults (
-  id TEXT PRIMARY KEY,
-  marketAddress TEXT UNIQUE NOT NULL,
-  marketName TEXT NOT NULL,
-  pairType TEXT NOT NULL,
-  strategyType TEXT NOT NULL,
-  maxLeverage DECIMAL(10,2) NOT NULL,
-  averageLeverage DECIMAL(10,2) NOT NULL,
-  totalDepositedUsd DECIMAL(20,6) NOT NULL,
-  totalBorrowedUsd DECIMAL(20,6) NOT NULL,
-  netApy DECIMAL(10,6) NOT NULL,
-  stakingApy DECIMAL(10,6) NOT NULL,
-  borrowCost DECIMAL(10,6) NOT NULL,
-  tvl DECIMAL(20,6) NOT NULL,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW(),
-  collateralTokenId TEXT REFERENCES tokens(id),
-  debtTokenId TEXT REFERENCES tokens(id)
-);
-
--- Kamino Lending Markets
+-- Kamino Lending Markets - Market configurations
 CREATE TABLE kamino_lending_markets (
   id TEXT PRIMARY KEY,
-  marketAddress TEXT UNIQUE NOT NULL,
-  marketName TEXT NOT NULL,
-  description TEXT,
-  isCurated BOOLEAN DEFAULT FALSE,
-  isPrimary BOOLEAN DEFAULT FALSE,
-  programId TEXT NOT NULL,
-  reserveCount INTEGER NOT NULL,
-  createdAt TIMESTAMP DEFAULT NOW(),
-  updatedAt TIMESTAMP DEFAULT NOW()
+  address TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  "lookupTable" TEXT NOT NULL,
+  "isCurated" BOOLEAN DEFAULT FALSE,
+  "isPrimary" BOOLEAN DEFAULT FALSE,
+  "configKey" TEXT NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW()
 );
 
--- Investment Strategies
-CREATE TABLE investment_strategies (
+-- Kamino Pairs - Trading pairs within lending markets
+CREATE TABLE kamino_pairs (
   id TEXT PRIMARY KEY,
-  name TEXT UNIQUE NOT NULL,
-  description TEXT NOT NULL,
-  strategyType TEXT NOT NULL,
-  riskLevel TEXT NOT NULL,
-  expectedApy DECIMAL(10,6) NOT NULL,
-  minInvestment DECIMAL(20,6) NOT NULL,
-  maxInvestment DECIMAL(20,6),
-  protocols TEXT[] NOT NULL,
-  tokens TEXT[] NOT NULL,
-  isActive BOOLEAN DEFAULT TRUE,
-  embedding VECTOR(1536),
-  riskEmbedding VECTOR(1536),
+  "depositReserveAddress" TEXT NOT NULL,
+  "borrowReserveAddress" TEXT NOT NULL,
+  "pairType" TEXT NOT NULL,
+  "strategyType" TEXT NOT NULL,
+  "supplyApyType" TEXT NOT NULL,
+  "supplyApyAddress" TEXT NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW(),
+  "lendingMarketId" TEXT REFERENCES kamino_lending_markets(id) ON DELETE CASCADE,
+  "collateralTokenId" TEXT REFERENCES tokens(id),
+  "debtTokenId" TEXT REFERENCES tokens(id),
+  UNIQUE("depositReserveAddress", "borrowReserveAddress")
+);
+
+-- Kamino Filter Types - Categorization of pairs
+CREATE TABLE kamino_filter_types (
+  id TEXT PRIMARY KEY,
+  "filterType" TEXT NOT NULL,
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW(),
+  "pairId" TEXT REFERENCES kamino_pairs(id) ON DELETE CASCADE,
+  UNIQUE("pairId", "filterType")
+);
+
+-- Kamino Historical APY - Time-series APY data
+CREATE TABLE kamino_historical_apy (
+  id TEXT PRIMARY KEY,
+  date TIMESTAMP NOT NULL,
+  "stakingApy" DECIMAL(10,6) NOT NULL,
+  "debtApy" DECIMAL(10,6) NOT NULL,
+  "timeRange" TEXT NOT NULL, -- '7D', '1M', '3M'
+  "createdAt" TIMESTAMP DEFAULT NOW(),
+  "updatedAt" TIMESTAMP DEFAULT NOW(),
+  "pairId" TEXT REFERENCES kamino_pairs(id) ON DELETE CASCADE,
+  UNIQUE("pairId", date, "timeRange")
+);
+
+-- Kamino Data Import - Metadata about data imports
+CREATE TABLE kamino_data_imports (
+  id TEXT PRIMARY KEY,
+  generatedAt TIMESTAMP NOT NULL,
+  totalMarkets INTEGER NOT NULL,
+  totalTokenMints INTEGER NOT NULL,
+  totalTokens INTEGER NOT NULL,
+  historicalApyFetchedAt TIMESTAMP NOT NULL,
+  totalPairsProcessed INTEGER NOT NULL,
+  totalPairs INTEGER NOT NULL,
+  sources JSONB NOT NULL,
   createdAt TIMESTAMP DEFAULT NOW(),
   updatedAt TIMESTAMP DEFAULT NOW()
 );
 
 -- Key relationships:
--- - Tokens are referenced by all market types
--- - Investment strategies link to protocols and tokens
--- - All rates are stored as strings to preserve precision
--- - Vector embeddings enable similarity search
+-- - Tokens are referenced by pairs as collateral and debt tokens
+-- - Pairs belong to lending markets
+-- - Pairs have multiple filter types (volatile, perp, sol, etc.)
+-- - Pairs have historical APY data across different time ranges
+-- - All APY data is stored as decimal for precise calculations
+-- - Strategy types include: directional, sol, etc.
+-- - Pair types include: volatile, sol, etc.
+-- - Filter types include: volatile, perp, sol, etc.
 `;
 
 export async function generateSQLQuery(userQuery: string): Promise<SQLQuery> {
   try {
+    const aiProvider = getAIProvider();
+    if (!aiProvider) {
+      throw new Error('AI provider not available');
+    }
+
     const { object: sqlQuery } = await generateObject({
-      model: openai('gpt-4o'),
-      system: `You are an expert SQL analyst specializing in DeFi investment data. 
+      model: aiProvider.model,
+      system: `You are an expert SQL analyst specializing in Kamino DeFi lending strategies. 
       
-      You have access to a comprehensive database containing:
-      - Token information (prices, metadata)
-      - Jupiter lending markets (borrow/lend rates)
-      - Drift markets (interest rates, utilization)
-      - DeFiLlama protocols (TVL data)
-      - Kamino vaults (leverage, APY data)
-      - Investment strategies (with vector embeddings)
+      You have access to a comprehensive Kamino database containing:
+      - Token information (SOL, USDC, JLP, LSTs, etc.) with market cap and volume data
+      - Kamino lending markets (12 different markets with various configurations)
+      - Trading pairs (44+ pairs with collateral/debt token relationships)
+      - Historical APY data (4,000+ records across 7D, 1M, 3M timeframes)
+      - Filter types (volatile, perp, sol, etc.) for pair categorization
+      - Strategy types (directional, sol, etc.) for different approaches
       
-      Your task is to generate accurate SQL queries that answer user questions about DeFi investment opportunities.
+      Your task is to generate accurate SQL queries that answer user questions about Kamino lending strategies and opportunities.
       
       Important guidelines:
-      1. Always use proper JOINs to get complete data
-      2. Convert string rates to numeric for calculations (CAST(rate AS DECIMAL))
-      3. Use vector similarity search when appropriate (embedding <=> query_embedding)
-      4. Consider APY calculations and risk assessments
-      5. Include relevant token information in results
-      6. Use proper aggregation for summary statistics
+      1. Always use proper JOINs to get complete pair data with tokens and markets
+      2. Focus on APY analysis and historical performance trends
+      3. Consider strategy types (directional, sol) and pair types (volatile, sol)
+      4. Use filter types to categorize and filter pairs appropriately
+      5. Include token metadata (market cap, volume) for risk assessment
+      6. Use proper aggregation for APY statistics and trends
       7. Handle NULL values appropriately
+      8. Focus on SOL-related strategies and LST (Liquid Staking Token) opportunities
+      9. Consider both staking APY and debt APY for net returns
+      10. Use time-based filtering for recent data analysis
+      
+      CRITICAL COLUMN NAMING:
+      - ALWAYS use double quotes around column names: "columnName" not columnName
+      - Use "timeRange" not timeRange
+      - Use "stakingApy" not stakingApy
+      - Use "debtApy" not debtApy
+      - Use "pairId" not pairId
+      - Use "depositReserveAddress" not depositReserveAddress
+      - Use "borrowReserveAddress" not borrowReserveAddress
+      - Use "strategyType" not strategyType
+      - Use "pairType" not pairType
+      - Use "marketCapUsd" not marketCapUsd
+      - Use "volumeUsd" not volumeUsd
+      
+      Common query patterns:
+      - Find high APY pairs: JOIN kamino_pairs with kamino_historical_apy
+      - SOL strategies: Filter by collateralToken.symbol = 'SOL' or debtToken.symbol = 'SOL'
+      - LST strategies: Look for strategyType = 'sol' pairs
+      - Volatile pairs: Filter by filterType = 'volatile'
+      - Recent performance: Use timeRange = '7D' and recent dates
       
       Database Schema:
       ${DATABASE_SCHEMA}`,
       
-      prompt: `Generate a SQL query for this DeFi investment question: "${userQuery}"
+      prompt: `Generate a SQL query for this Kamino DeFi investment question: "${userQuery}"
       
       Focus on:
-      - Finding the best investment opportunities
-      - Calculating APYs and returns
-      - Risk assessment and diversification
-      - Cross-protocol analysis
-      - Token performance and correlations
+      - Finding the best Kamino lending opportunities
+      - Analyzing historical APY performance and trends
+      - SOL and LST (Liquid Staking Token) strategies
+      - Risk assessment based on token market cap and volume
+      - Strategy type analysis (directional vs sol strategies)
+      - Pair type filtering (volatile vs sol pairs)
+      - Time-based performance analysis (7D, 1M, 3M)
+      - Net APY calculations (staking APY - debt APY)
       
-      Return a well-structured query with proper JOINs and calculations.`,
+      Return a well-structured query with proper JOINs between:
+      - kamino_pairs (main trading pairs)
+      - tokens (collateral and debt token details)
+      - kamino_lending_markets (market information)
+      - kamino_historical_apy (APY data)
+      - kamino_filter_types (pair categorization)`,
       
       schema: sqlQuerySchema,
     });
