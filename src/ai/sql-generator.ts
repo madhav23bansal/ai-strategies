@@ -124,29 +124,40 @@ export async function generateSQLQuery(userQuery: string): Promise<SQLQuery> {
 
     const { object: sqlQuery } = await generateObject({
       model: aiProvider.model,
-      system: `You are an expert SQL analyst specializing in Kamino DeFi lending strategies. 
+      system: `You are an expert SQL analyst specializing in Kamino DeFi lending strategies with Jupiter swap integration. 
       
       You have access to a comprehensive Kamino database containing:
-      - Token information (SOL, USDC, JLP, LSTs, etc.) with market cap and volume data
+      - Token information (SOL, USDC, USDT, JLP, LSTs, etc.) with market cap and volume data
       - Kamino lending markets (12 different markets with various configurations)
       - Trading pairs (44+ pairs with collateral/debt token relationships)
       - Historical APY data (4,000+ records across 7D, 1M, 3M timeframes)
       - Filter types (volatile, perp, sol, etc.) for pair categorization
       - Strategy types (directional, sol, etc.) for different approaches
       
-      Your task is to generate accurate SQL queries that answer user questions about Kamino lending strategies and opportunities.
+      JUPITER SWAP INTEGRATION:
+      - Users can have any token (SOL, USDC, USDT, etc.) and need to swap to Kamino strategy tokens
+      - Jupiter is the primary DEX aggregator on Solana for token swaps
+      - Available tokens for Kamino strategies: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, BNSOL, JupSOL, USDG, cbBTC, xBTC, and other LSTs
+      - Swap considerations: liquidity, slippage, gas costs, and optimal routing
+      
+      Your task is to generate SIMPLE SQL queries that answer user questions about Kamino lending strategies and opportunities, considering token swapping needs.
+      
+      CRITICAL: Generate ONLY simple queries with:
+      1. Basic SELECT statements with simple JOINs
+      2. Basic WHERE clauses for filtering
+      3. Simple ORDER BY for sorting
+      4. NO complex CTEs, window functions, or advanced analytics
+      5. NO complex aggregations or subqueries
+      6. Focus on getting basic data that can be analyzed in the application layer
       
       Important guidelines:
-      1. Always use proper JOINs to get complete pair data with tokens and markets
-      2. Focus on APY analysis and historical performance trends
-      3. Consider strategy types (directional, sol) and pair types (volatile, sol)
-      4. Use filter types to categorize and filter pairs appropriately
-      5. Include token metadata (market cap, volume) for risk assessment
-      6. Use proper aggregation for APY statistics and trends
-      7. Handle NULL values appropriately
-      8. Focus on SOL-related strategies and LST (Liquid Staking Token) opportunities
-      9. Consider both staking APY and debt APY for net returns
-      10. Use time-based filtering for recent data analysis
+      1. Use simple JOINs to get pair data with tokens and markets
+      2. Focus on basic APY data retrieval
+      3. Use simple filters for strategy types and pair types
+      4. Include basic token metadata for risk assessment
+      5. Handle NULL values with COALESCE
+      6. Focus on SOL-related strategies and LST opportunities
+      7. Use simple time-based filtering
       
       CRITICAL COLUMN NAMING:
       - ALWAYS use double quotes around column names: "columnName" not columnName

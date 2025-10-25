@@ -1,0 +1,722 @@
+[
+	{
+		"metadata": {
+			"version": 1,
+			"category": "transaction-management",
+			"id": "transaction.submit",
+			"displayName": "Submit Transactions",
+			"description": "Submits transactions to blockchain or simulates them without execution. Pauses workflow to wait for signatures when submitting.",
+			"icon": "/workflow/nodes/cursor-select.svg",
+			"tags": [
+				"blockchain",
+				"transaction",
+				"submit",
+				"simulate",
+				"solana"
+			]
+		},
+		"parameters": [
+			{
+				"name": "transactions",
+				"displayName": "Transactions",
+				"type": "transaction-array",
+				"required": true,
+				"description": "Array of unsigned transactions to submit",
+				"placeholder": "{{ $node1.transactions }}"
+			},
+			{
+				"name": "submitMethod",
+				"displayName": "Submit Method",
+				"type": "string",
+				"required": false,
+				"description": "How to submit transactions",
+				"default": "rpc",
+				"options": [
+					{
+						"label": "Direct RPC",
+						"value": "rpc"
+					},
+					{
+						"label": "Jito Bundle",
+						"value": "jito"
+					}
+				]
+			},
+			{
+				"name": "confirmationTimeout",
+				"displayName": "Confirmation Timeout",
+				"type": "number",
+				"required": false,
+				"description": "How long to wait for transaction confirmation",
+				"default": 60000,
+				"validation": {
+					"min": 1000,
+					"max": 300000
+				}
+			},
+			{
+				"name": "simulateBeforeSubmit",
+				"displayName": "Simulate Before Submit",
+				"type": "boolean",
+				"required": false,
+				"description": "Run simulation before requesting signatures (recommended)",
+				"default": true
+			},
+			{
+				"name": "stopOnSimulationFailure",
+				"displayName": "Stop On Simulation Failure",
+				"type": "boolean",
+				"required": false,
+				"description": "Fail workflow if simulation fails",
+				"default": true
+			},
+			{
+				"name": "includeSimulationData",
+				"displayName": "Include Simulation Data",
+				"type": "boolean",
+				"required": true,
+				"description": "Include detailed simulation results in output",
+				"default": false
+			},
+			{
+				"name": "simulateOnly",
+				"displayName": "Simulate Only",
+				"type": "boolean",
+				"required": true,
+				"description": "Only simulate transactions without submitting them",
+				"default": false
+			},
+			{
+				"name": "useJito",
+				"displayName": "Use Jito",
+				"type": "boolean",
+				"required": false,
+				"description": "Simulate all transactions as a bundle in one RPC call (faster, Jito-compatible)",
+				"default": true
+			},
+			{
+				"name": "includeAccounts",
+				"displayName": "Include Accounts",
+				"type": "boolean",
+				"required": true,
+				"description": "Include account data in simulation results",
+				"default": false
+			},
+			{
+				"name": "failOnSimulationError",
+				"displayName": "Fail On Simulation Error",
+				"type": "boolean",
+				"required": false,
+				"description": "Fail the workflow if any simulation fails",
+				"default": true
+			}
+		]
+	},
+	{
+		"metadata": {
+			"version": 1,
+			"category": "swap",
+			"id": "swap.token",
+			"displayName": "Swap Tokens",
+			"description": "Swap tokens using Jupiter aggregator",
+			"icon": "/workflow/nodes/data-transfer.svg",
+			"tags": [
+				"swap",
+				"jupiter",
+				"solana",
+				"dex"
+			]
+		},
+		"parameters": [
+			{
+				"name": "chain",
+				"displayName": "Chain",
+				"type": "string",
+				"required": false,
+				"description": "Input parameter: chain",
+				"default": "solana",
+				"options": [
+					{
+						"label": "Solana",
+						"value": "solana"
+					}
+				]
+			},
+			{
+				"name": "fromToken",
+				"displayName": "From Token",
+				"type": "string",
+				"required": true,
+				"description": "Source token mint address",
+				"placeholder": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+			},
+			{
+				"name": "toToken",
+				"displayName": "To Token",
+				"type": "string",
+				"required": true,
+				"description": "Destination token mint address",
+				"placeholder": "So11111111111111111111111111111111111111112"
+			},
+			{
+				"name": "amount",
+				"displayName": "Amount",
+				"type": "string",
+				"required": true,
+				"description": "Amount to swap (in token decimals)"
+			},
+			{
+				"name": "recipient",
+				"displayName": "Recipient",
+				"type": "string",
+				"required": true,
+				"description": "Address to receive swapped tokens",
+				"placeholder": "{{ $input.userAddress }}"
+			},
+			{
+				"name": "slippage",
+				"displayName": "Slippage",
+				"type": "number",
+				"required": false,
+				"description": "Slippage tolerance in basis points",
+				"default": 50,
+				"validation": {
+					"min": 1,
+					"max": 1000
+				}
+			}
+		]
+	},
+	{
+		"metadata": {
+			"version": 1,
+			"category": "bridge",
+			"id": "bridge.token",
+			"displayName": "Bridge Tokens",
+			"description": "Bridge tokens across different blockchains",
+			"icon": "/workflow/nodes/data-transfer.svg",
+			"tags": [
+				"bridge",
+				"cross-chain",
+				"solana",
+				"ethereum"
+			]
+		},
+		"parameters": [
+			{
+				"name": "fromChain",
+				"displayName": "From Chain",
+				"type": "string",
+				"required": true,
+				"description": "Source blockchain",
+				"options": [
+					{
+						"label": "Solana",
+						"value": "solana"
+					},
+					{
+						"label": "Ethereum",
+						"value": "ethereum"
+					},
+					{
+						"label": "Base",
+						"value": "base"
+					},
+					{
+						"label": "Arbitrum",
+						"value": "arbitrum"
+					}
+				]
+			},
+			{
+				"name": "toChain",
+				"displayName": "To Chain",
+				"type": "string",
+				"required": true,
+				"description": "Destination blockchain",
+				"options": [
+					{
+						"label": "Solana",
+						"value": "solana"
+					},
+					{
+						"label": "Ethereum",
+						"value": "ethereum"
+					},
+					{
+						"label": "Base",
+						"value": "base"
+					},
+					{
+						"label": "Arbitrum",
+						"value": "arbitrum"
+					}
+				]
+			},
+			{
+				"name": "token",
+				"displayName": "Token",
+				"type": "string",
+				"required": true,
+				"description": "Token mint/contract address",
+				"placeholder": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+			},
+			{
+				"name": "amount",
+				"displayName": "Amount",
+				"type": "string",
+				"required": true,
+				"description": "Amount to bridge"
+			},
+			{
+				"name": "recipient",
+				"displayName": "Recipient",
+				"type": "string",
+				"required": true,
+				"description": "Address to receive tokens on destination chain"
+			},
+			{
+				"name": "slippage",
+				"displayName": "Slippage",
+				"type": "number",
+				"required": false,
+				"description": "Slippage tolerance in basis points",
+				"default": 50,
+				"validation": {
+					"min": 1,
+					"max": 1000
+				}
+			}
+		]
+	},
+	{
+		"metadata": {
+			"version": 1,
+			"category": "defi",
+			"id": "lending.supply",
+			"displayName": "Supply Tokens",
+			"description": "Supply tokens to lending protocols for earning yield",
+			"icon": "/workflow/nodes/lock-icon.svg",
+			"tags": [
+				"lending",
+				"supply",
+				"defi",
+				"kamino",
+				"jupiter",
+				"yield"
+			]
+		},
+		"parameters": [
+			{
+				"name": "protocol",
+				"displayName": "Protocol",
+				"type": "string",
+				"required": false,
+				"description": "Input parameter: protocol",
+				"default": "kamino",
+				"options": [
+					{
+						"label": "Kamino",
+						"value": "kamino"
+					},
+					{
+						"label": "Jupiter",
+						"value": "jupiter"
+					}
+				]
+			},
+			{
+				"name": "market",
+				"displayName": "Market",
+				"type": "string",
+				"required": true,
+				"description": "Market address for the lending protocol"
+			},
+			{
+				"name": "token",
+				"displayName": "Token",
+				"type": "string",
+				"required": true,
+				"description": "Token mint address to supply"
+			},
+			{
+				"name": "amount",
+				"displayName": "Amount",
+				"type": "string",
+				"required": true,
+				"description": "Amount in smallest unit (e.g., lamports)"
+			},
+			{
+				"name": "userAddress",
+				"displayName": "User Address",
+				"type": "string",
+				"required": true,
+				"description": "User wallet address",
+				"placeholder": "{{ $input.userAddress }}"
+			},
+			{
+				"name": "slippageBps",
+				"displayName": "Slippage Bps",
+				"type": "number",
+				"required": false,
+				"description": "Slippage tolerance in basis points",
+				"default": 50,
+				"validation": {
+					"min": 1,
+					"max": 1000
+				}
+			}
+		]
+	},
+	{
+		"metadata": {
+			"version": 1,
+			"category": "defi",
+			"id": "lending.borrow",
+			"displayName": "Borrow Tokens",
+			"description": "Borrow tokens from lending protocols using collateral",
+			"icon": "/workflow/nodes/lock-icon.svg",
+			"tags": [
+				"lending",
+				"borrow",
+				"defi",
+				"kamino",
+				"jupiter",
+				"collateral"
+			]
+		},
+		"parameters": [
+			{
+				"name": "protocol",
+				"displayName": "Protocol",
+				"type": "string",
+				"required": false,
+				"description": "Input parameter: protocol",
+				"default": "kamino",
+				"options": [
+					{
+						"label": "Kamino",
+						"value": "kamino"
+					},
+					{
+						"label": "Jupiter",
+						"value": "jupiter"
+					}
+				]
+			},
+			{
+				"name": "market",
+				"displayName": "Market",
+				"type": "string",
+				"required": true,
+				"description": "Market address for the lending protocol"
+			},
+			{
+				"name": "token",
+				"displayName": "Token",
+				"type": "string",
+				"required": true,
+				"description": "Token mint address to borrow"
+			},
+			{
+				"name": "amount",
+				"displayName": "Amount",
+				"type": "string",
+				"required": true,
+				"description": "Amount to borrow in smallest unit (e.g., lamports)"
+			},
+			{
+				"name": "userAddress",
+				"displayName": "User Address",
+				"type": "string",
+				"required": true,
+				"description": "User wallet address",
+				"placeholder": "{{ $input.userAddress }}"
+			},
+			{
+				"name": "slippageBps",
+				"displayName": "Slippage Bps",
+				"type": "number",
+				"required": false,
+				"description": "Slippage tolerance in basis points",
+				"default": 50,
+				"validation": {
+					"min": 1,
+					"max": 1000
+				}
+			}
+		]
+	},
+	{
+		"metadata": {
+			"version": 1,
+			"category": "defi",
+			"id": "lending.repay",
+			"displayName": "Repay Loan",
+			"description": "Repay borrowed tokens to lending protocols",
+			"icon": "/workflow/nodes/unlock-icon.svg",
+			"tags": [
+				"lending",
+				"repay",
+				"defi",
+				"kamino",
+				"jupiter",
+				"debt"
+			]
+		},
+		"parameters": [
+			{
+				"name": "protocol",
+				"displayName": "Protocol",
+				"type": "string",
+				"required": false,
+				"description": "Input parameter: protocol",
+				"default": "kamino",
+				"options": [
+					{
+						"label": "Kamino",
+						"value": "kamino"
+					},
+					{
+						"label": "Jupiter",
+						"value": "jupiter"
+					}
+				]
+			},
+			{
+				"name": "market",
+				"displayName": "Market",
+				"type": "string",
+				"required": true,
+				"description": "Market address for the lending protocol"
+			},
+			{
+				"name": "token",
+				"displayName": "Token",
+				"type": "string",
+				"required": true,
+				"description": "Token mint address to repay"
+			},
+			{
+				"name": "amount",
+				"displayName": "Amount",
+				"type": "string",
+				"required": true,
+				"description": "Amount to repay in smallest unit (e.g., lamports)"
+			},
+			{
+				"name": "userAddress",
+				"displayName": "User Address",
+				"type": "string",
+				"required": true,
+				"description": "User wallet address",
+				"placeholder": "{{ $input.userAddress }}"
+			},
+			{
+				"name": "percentage",
+				"displayName": "Percentage",
+				"type": "number",
+				"required": false,
+				"description": "Percentage of debt to repay (1-100)",
+				"default": 100,
+				"validation": {
+					"min": 1,
+					"max": 100
+				}
+			},
+			{
+				"name": "slippageBps",
+				"displayName": "Slippage Bps",
+				"type": "number",
+				"required": false,
+				"description": "Slippage tolerance in basis points",
+				"default": 50,
+				"validation": {
+					"min": 1,
+					"max": 1000
+				}
+			}
+		]
+	},
+	{
+		"metadata": {
+			"version": 1,
+			"category": "defi",
+			"id": "lending.withdraw",
+			"displayName": "Withdraw Tokens",
+			"description": "Withdraw supplied tokens from lending protocols",
+			"icon": "/workflow/nodes/unlock-icon.svg",
+			"tags": [
+				"lending",
+				"withdraw",
+				"defi",
+				"kamino",
+				"jupiter",
+				"supply"
+			]
+		},
+		"parameters": [
+			{
+				"name": "protocol",
+				"displayName": "Protocol",
+				"type": "string",
+				"required": false,
+				"description": "Input parameter: protocol",
+				"default": "kamino",
+				"options": [
+					{
+						"label": "Kamino",
+						"value": "kamino"
+					},
+					{
+						"label": "Jupiter",
+						"value": "jupiter"
+					}
+				]
+			},
+			{
+				"name": "market",
+				"displayName": "Market",
+				"type": "string",
+				"required": true,
+				"description": "Market address for the lending protocol"
+			},
+			{
+				"name": "token",
+				"displayName": "Token",
+				"type": "string",
+				"required": true,
+				"description": "Token mint address to withdraw"
+			},
+			{
+				"name": "amount",
+				"displayName": "Amount",
+				"type": "string",
+				"required": true,
+				"description": "Amount to withdraw in smallest unit (e.g., lamports)"
+			},
+			{
+				"name": "userAddress",
+				"displayName": "User Address",
+				"type": "string",
+				"required": true,
+				"description": "User wallet address",
+				"placeholder": "{{ $input.userAddress }}"
+			},
+			{
+				"name": "percentage",
+				"displayName": "Percentage",
+				"type": "number",
+				"required": false,
+				"description": "Percentage of supply to withdraw (1-100)",
+				"default": 100,
+				"validation": {
+					"min": 1,
+					"max": 100
+				}
+			},
+			{
+				"name": "slippageBps",
+				"displayName": "Slippage Bps",
+				"type": "number",
+				"required": false,
+				"description": "Slippage tolerance in basis points",
+				"default": 50,
+				"validation": {
+					"min": 1,
+					"max": 1000
+				}
+			}
+		]
+	},
+	{
+		"metadata": {
+			"version": 1,
+			"category": "defi",
+			"id": "position.get",
+			"displayName": "Get Position",
+			"description": "Fetch position details from database",
+			"icon": "📊",
+			"tags": [
+				"position",
+				"query",
+				"database"
+			]
+		},
+		"parameters": [
+			{
+				"name": "positionId",
+				"displayName": "Position Id",
+				"type": "string",
+				"required": true,
+				"description": "Position ID to fetch"
+			}
+		]
+	},
+	{
+		"metadata": {
+			"version": 1,
+			"category": "utility",
+			"id": "ai.agent",
+			"displayName": "AI Agent",
+			"description": "AI agent node to get structured output from AI",
+			"icon": "/workflow/nodes/ai-agent.svg",
+			"tags": [
+				"ai",
+				"processing",
+				"structured-output"
+			]
+		},
+		"parameters": [
+			{
+				"name": "input",
+				"displayName": "Input",
+				"type": "json",
+				"required": true,
+				"description": "Input data to be processed by AI",
+				"placeholder": "{{ $node1 }}"
+			},
+			{
+				"name": "systemPrompt",
+				"displayName": "System Prompt",
+				"type": "string",
+				"required": true,
+				"description": "Instructions for AI on how to process the data",
+				"placeholder": "You are an amzing AI assistant."
+			},
+			{
+				"name": "outputSchema",
+				"displayName": "Output Schema",
+				"type": "json",
+				"required": true,
+				"description": "JSON Schema defining the expected output structure"
+			},
+			{
+				"name": "model",
+				"displayName": "Model",
+				"type": "string",
+				"required": false,
+				"description": "AI model to use",
+				"default": "gpt-5-mini",
+				"options": [
+					{
+						"label": "GPT-5 Mini",
+						"value": "gpt-5-mini"
+					}
+				]
+			},
+			{
+				"name": "temperature",
+				"displayName": "Temperature",
+				"type": "number",
+				"required": false,
+				"description": "Controls randomness (0 = deterministic, 1 = creative)",
+				"default": 0.2,
+				"validation": {
+					"min": 0,
+					"max": 1
+				}
+			}
+		]
+	}
+]

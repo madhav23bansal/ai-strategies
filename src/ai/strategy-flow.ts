@@ -1,6 +1,5 @@
 import { generateObject, generateText } from 'ai';
 
-import { PerpsDataLoader } from './perps-data-loader';
 import { PrismaClient } from '@prisma/client';
 import { generateSQLQuery } from './sql-generator';
 import { getAIProvider } from './providers';
@@ -71,12 +70,10 @@ export type MarketAnalysis = z.infer<typeof marketAnalysisSchema>;
 export class DeFiStrategyFlow {
   private prisma: PrismaClient;
   private aiProvider: any;
-  private perpsLoader: PerpsDataLoader;
 
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
     this.aiProvider = getAIProvider();
-    this.perpsLoader = new PerpsDataLoader();
     
     if (!this.aiProvider) {
       throw new Error('Azure OpenAI provider not available. Please set AZURE_OPENAI_API_KEY environment variable.');
@@ -157,7 +154,14 @@ export class DeFiStrategyFlow {
     for (const sqlQuery of sqlQueries) {
       console.log(`🔍 Executing: ${sqlQuery.description}`);
       try {
-        const data = await this.prisma.$queryRawUnsafe(sqlQuery.query);
+        // Default parameters for common queries
+        const defaultParams = [
+          1000000, // $1: minimum market cap threshold (1M USD)
+          null,    // $2: pair type filter (null = all types)
+          10000    // $3: investment amount (10k USD)
+        ];
+        
+        const data = await this.prisma.$queryRawUnsafe(sqlQuery.query, ...defaultParams);
         allData.push({
           query: sqlQuery.description,
           data: data,
@@ -179,12 +183,9 @@ export class DeFiStrategyFlow {
    * Step 3: Analyze market data
    */
   private async analyzeMarketData(marketData: any[], userPrompt: string): Promise<MarketAnalysis> {
-    // Load current perps data for context
-    const perpsContext = await this.perpsLoader.getFormattedContext();
-    
     const { object: analysis } = await generateObject({
       model: this.aiProvider.model,
-      system: `You are a senior DeFi strategist for Lomen, an AI-powered DeFi investment platform. You have deep expertise in both Kamino lending strategies and Solana perpetual trading.
+      system: `You are a senior DeFi strategist for Lomen, an AI-powered DeFi investment platform. You have deep expertise in Kamino lending strategies, yield farming, and Jupiter token swapping.
 
       KAMINO STRATEGY TYPES AND ANALYSIS:
       - LOOPING: SOL leverage strategies using Kamino lending markets for borrowing against SOL/LST collateral
@@ -195,29 +196,29 @@ export class DeFiStrategyFlow {
       - VOLATILE_PAIRS: High-yield strategies using volatile token pairs on Kamino
       - DIRECTIONAL: Directional strategies based on market trends and APY opportunities
 
-      SOLANA PERPS TRADING EXPERTISE:
-      - DRIFT PROTOCOL: Leading decentralized perps exchange on Solana with advanced trading features
-      - TRADING STRATEGIES: Long/short positions, funding rate arbitrage, cross-margin trading, delta-neutral strategies
-      - RISK MANAGEMENT: Stop-losses, position sizing, funding rate monitoring, liquidation risk management
+      JUPITER SWAP INTEGRATION:
+      - Users may have any token (SOL, USDC, USDT, etc.) and need to swap to Kamino strategy tokens
+      - Jupiter is the primary DEX aggregator on Solana for optimal token swaps
+      - Available Kamino tokens: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, BNSOL, JupSOL, USDG, cbBTC, xBTC, and other LSTs
+      - Swap considerations: liquidity, slippage, gas costs, and optimal routing
+      - Always include swap steps when user's tokens don't match strategy requirements
 
-      COMBINED STRATEGY ANALYSIS FOCUS:
+      KAMINO STRATEGY ANALYSIS FOCUS:
       - Current APY rates from Kamino historical data (staking APY vs debt APY)
       - SOL and LST performance across different timeframes (7D, 1M, 3M)
       - Strategy type effectiveness (directional vs sol strategies)
       - Pair type analysis (volatile vs sol pairs)
       - Market conditions based on Kamino lending market data
       - Risk assessment using token market cap and volume data
-      - Perps trading opportunities for hedging and directional exposure
-      - Capital efficiency across both yield farming and trading strategies
-      - Recommended allocation balancing yield generation and trading components
+      - Capital efficiency across yield farming strategies
+      - Token swapping requirements and optimal routing
+      - Recommended allocation for optimal yield generation
       
-      Be specific and data-driven in your analysis. Use actual APY numbers, token data, and market conditions from the Kamino data, combined with current perps market data to support your conclusions.`,
+      Be specific and data-driven in your analysis. Use actual APY numbers, token data, and market conditions from the Kamino data to support your conclusions.`,
   
       prompt: `BRIEF market analysis for: "${userPrompt}"
       
-      PERPS: ${perpsContext}
-      
-      KAMINO: ${JSON.stringify(serializeForAI(marketData), null, 2)}
+      KAMINO DATA: ${JSON.stringify(serializeForAI(marketData), null, 2)}
       
       Provide SHORT analysis:
       • Market conditions (2 sentences max)
@@ -243,12 +244,9 @@ export class DeFiStrategyFlow {
     riskTolerance: 'conservative' | 'moderate' | 'aggressive',
     investmentAmount?: number
   ): Promise<InvestmentStrategy> {
-    // Load current perps data for strategy creation
-    const perpsContext = await this.perpsLoader.getFormattedContext();
-    
     const { object: strategy } = await generateObject({
       model: this.aiProvider.model,
-      system: `You are a senior DeFi strategist for Lomen, an AI-powered DeFi investment platform. Create sophisticated, actionable strategies that combine Kamino lending with Solana perpetual trading.
+      system: `You are a senior DeFi strategist for Lomen, an AI-powered DeFi investment platform. Create sophisticated, actionable strategies that combine Jupiter token swapping with Kamino lending and yield farming.
 
       KAMINO STRATEGY CREATION EXPERTISE:
       - LOOPING: Design SOL leverage strategies using Kamino lending markets for borrowing against SOL/LST collateral
@@ -259,44 +257,47 @@ export class DeFiStrategyFlow {
       - VOLATILE_PAIRS: High-yield strategies using volatile token pairs on Kamino
       - DIRECTIONAL: Directional strategies based on market trends and APY opportunities
 
-      SOLANA PERPS TRADING EXPERTISE:
-      - DRIFT PROTOCOL: Leading decentralized perps exchange on Solana with advanced trading features
-      - TRADING STRATEGIES: Long/short positions, funding rate arbitrage, cross-margin trading, delta-neutral strategies
-      - RISK MANAGEMENT: Stop-losses, position sizing, funding rate monitoring, liquidation risk management
+      JUPITER SWAP INTEGRATION:
+      - Users may have any token (SOL, USDC, USDT, etc.) and need to swap to Kamino strategy tokens
+      - Jupiter is the primary DEX aggregator on Solana for optimal token swaps
+      - Available Kamino tokens: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, BNSOL, JupSOL, USDG, cbBTC, xBTC, and other LSTs
+      - Always include swap steps when user's tokens don't match strategy requirements
+      - Consider swap costs, slippage, and liquidity in strategy planning
+      - Use Jupiter's optimal routing for best swap rates
 
-      COMBINED STRATEGY REQUIREMENTS:
+      KAMINO STRATEGY REQUIREMENTS:
       - Base strategy on actual Kamino market data provided
       - Use specific APY rates, token data, and opportunities from Kamino pairs
-      - Integrate current perps trading opportunities for directional exposure and hedging
+      - Include Jupiter swap steps when tokens don't match strategy requirements
       - Focus on SOL and LST strategies for maximum impact
       - Consider both staking APY and debt APY for net returns
       - Include specific Kamino lending markets and token pairs from the data
-      - Provide clear, executable steps for both Kamino and perps platforms
+      - Provide clear, executable steps for both Jupiter swaps and Kamino platform
       - Reference actual APY numbers and market conditions from the data
-      - Balance yield generation with trading opportunities
-      - Include comprehensive risk management across both platforms
-      - Use current perps market data to identify specific trading opportunities
+      - Focus on yield generation and capital efficiency
+      - Include comprehensive risk management for both swapping and lending strategies
+      - Consider total costs including swap fees and gas costs
 
       Available Kamino data: 12 lending markets, 44+ trading pairs, 4,000+ historical APY records
-      Available tokens: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, and other LSTs
-      Available perps platform: Drift Protocol (70 markets, $100M+ daily volume)`,
+      Available tokens: SOL, USDC, USDT, JLP, mSOL, JitoSOL, bbSOL, BNSOL, JupSOL, USDG, cbBTC, xBTC, and other LSTs`,
     
-      prompt: `Create a BRIEF DeFi strategy for: "${userPrompt}"
+      prompt: `Create a BRIEF Kamino strategy with Jupiter swaps for: "${userPrompt}"
       
       Risk: ${riskTolerance} | Investment: ${investmentAmount ? `$${investmentAmount}` : 'Flexible'}
-      
-      PERPS DATA: ${perpsContext}
       
       KAMINO DATA: ${JSON.stringify(serializeForAI(marketData), null, 2)}
       
       ANALYSIS: ${JSON.stringify(analysis, null, 2)}
       
       REQUIREMENTS:
-      • Use real data from both sources
+      • Use real Kamino data only
+      • Include Jupiter swap steps if user's tokens don't match strategy requirements
+      • Consider swap costs, slippage, and liquidity
       • Keep responses SHORT and DIRECT
       • Max 8 steps, 5 risks, 5 monitoring items
       • Use bullet points and short sentences
       • Focus on key numbers and essential actions only
+      • Include both swap and lending steps
       
       CRITICAL: BE BRIEF. NO LONG PARAGRAPHS.`,
     

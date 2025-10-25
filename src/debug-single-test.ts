@@ -162,8 +162,8 @@ async function debugSingleTest() {
       console.log(`❌ Data analysis failed:`, error);
     }
     
-    // Simple prompt to test brief responses
-    const userPrompt = `Create a brief DeFi strategy combining Kamino yield farming with Drift perps trading for $10k investment.`;
+    // Realistic prompt to test Jupiter swap integration
+    const userPrompt = `I have $10,000 worth of USDC and want to maximize my returns using Kamino strategies. I'm open to any high-yield opportunities but prefer SOL and LST strategies. Please create a strategy that includes any necessary token swaps.`;
 
     console.log(`\n📝 Enhanced User prompt: "${userPrompt}"`);
     
@@ -171,6 +171,16 @@ async function debugSingleTest() {
       const result = await strategyFlow.generateStrategy(userPrompt, 'moderate', 10000);
       console.log('🎉 Enhanced strategy generation successful!');
       console.log('Strategy:', JSON.stringify(result.strategy, null, 2));
+      
+      // Test 2: Different token scenario
+      console.log('\n🔄 Test 2: Different Token Scenario');
+      const userPrompt2 = `I have 5 SOL tokens and want to earn yield. What's the best Kamino strategy for me? Include any necessary swaps.`;
+      console.log(`\n📝 Test 2 prompt: "${userPrompt2}"`);
+      
+      const result2 = await strategyFlow.generateStrategy(userPrompt2, 'aggressive', 1000);
+      console.log('🎉 Test 2 strategy generation successful!');
+      console.log('Strategy 2:', JSON.stringify(result2.strategy, null, 2));
+      
     } catch (error) {
       console.log('❌ Strategy generation failed:', error);
       console.log('Error details:', {
