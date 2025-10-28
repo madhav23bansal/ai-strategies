@@ -154,12 +154,8 @@ export class DeFiStrategyFlow {
     for (const sqlQuery of sqlQueries) {
       console.log(`🔍 Executing: ${sqlQuery.description}`);
       try {
-        // Default parameters for common queries
-        const defaultParams = [
-          1000000, // $1: minimum market cap threshold (1M USD)
-          null,    // $2: pair type filter (null = all types)
-          10000    // $3: investment amount (10k USD)
-        ];
+        // Simple parameters - most queries don't need complex parameters
+        const defaultParams: any[] = [];
         
         const data = await this.prisma.$queryRawUnsafe(sqlQuery.query, ...defaultParams);
         allData.push({

@@ -1,0 +1,73 @@
+# JLP Yield Hunter
+## Strategy: JLP 1.2x Leverage Loop
+
+**Investment Amount:** $15,000
+**Risk Tolerance:** aggressive
+**Expected APY:** 58.54%
+**Strategy Type:** leverage_farming
+**Capital Efficiency:** 80%
+
+## Description
+Swap USDC → JLP via Jupiter and create a light 1.2x leveraged JLP position on Kamino to capture elevated JLP staking APY (~49.86%).
+
+## Protocols Used
+Jupiter, Kamino
+
+## Tokens Involved
+USDC, JLP
+
+## Execution Steps
+1. On Jupiter swap $15,000 USDC → JLP using Best route; set max slippage 0.5–0.8% and confirm price impact.
+2. Deposit all JLP as collateral into Kamino (depositReserveAddress: DdTmCCjv7zHRD1hJv3E8bpnSEQBzdKkzB1j9ApXX5QoP).
+3. Borrow USDC from Kamino (borrowReserveAddress: Ga4rZytCpq1unD4DbEJ5bkHeUz9g3oh9AAFEi6vSauXp) up to 20% ($3,000); debt APY ≈ 6.46% (monitor live).
+4. Swap borrowed $3,000 USDC → JLP on Jupiter (same slippage limits) and redeposit JLP to increase collateral (target total exposure ≈ $18k, ~1.2x).
+5. Keep net borrow ≤25% of total position to limit liquidation risk and cap exposure to rate spikes.
+6. Rebalance weekly or immediately if Kamino debtAPY >10% or LTV nears liquidation threshold.
+
+## Risk Factors
+1. JLP price moves create collateral volatility and potential impermanent loss.
+2. Borrow rates can spike (observed up to ~16.5%) and quickly erode net yield.
+3. Liquidation risk from leverage if LTV steps up or JLP falls.
+4. Swap slippage and Jupiter routing fees reduce effective capital deployed.
+5. Protocol risk on Kamino or JLP pool changes.
+
+## Monitoring Requirements
+1. Kamino JLP stakingApy (currently ~49.85867%).
+2. Kamino USDC debtApy (typical ~6.4% but can spike; watch for >10%).
+3. Position LTV / collateral ratio after each loop.
+4. Jupiter swap price impact and cumulative slippage.
+5. On-chain tx confirmations and unexpected protocol governance updates.
+
+## Exit Strategy
+Swap JLP → USDC via Jupiter and repay borrowed USDC on Kamino, or unwind loops sequentially (redeem redeposited JLP then repay debt) when stakingApy falls or debtApy spikes.
+
+## Additional Details
+- **Complexity Level:** 6/10
+- **Time Horizon:** medium
+- **Gas Costs:** Estimated total ~0.5–1.5 SOL for swaps + Kamino transactions (~$20–60 depending on SOL price).
+- **Liquidity Requirements:** High liquidity: JLP market cap ≈ $2.15B and 7D volume ≈ $94.8M supports efficient Jupiter routing and low slippage.
+
+## Market Analysis
+**Market Conditions:** JLP offers a very high 7‑day staking APY ~49.86% with strong liquidity (market cap ≈ $2.15B, 7D volume ≈ $94.8M). Paired borrow costs (USDC/USDG) are typically ~6% but can spike (observed up to ~16.5%), increasing net cost/volatility.
+**Opportunity Score:** 82/100
+**Risk Score:** 63/100
+**Recommended Allocation:** Swap $15,000 USDC → JLP via Jupiter (best-route, minimal slippage), deposit as JLP collateral in the JLP/USDC Kamino directional pair and start with light leverage (keep net borrow ≤25% of position) to capture ~50% staking APY while limiting liquidation risk.
+
+**Alternatives:**
+1. Use the JLP → USDG pair (JLP collateral / USDG debt) if you want similar yield with different debt exposure.
+2. Keep 20–30% in USDC stables or Kamino STABLES to hedge against borrow-rate spikes and operational risk.
+3. Split a portion into LST_STRATEGIES (mSOL or JitoSOL) for lower volatility SOL-linked yield and diversification.
+
+**Market Trends:**
+1. 7‑day JLP staking APY is very elevated at ~49.86%, indicating strong reward incentives for JLP collateral.
+2. Debt APYs for USDC show variability (~6% typical, spiking to ~16.5%), so borrowing cost is a material risk factor.
+3. JLP liquidity is healthy (market cap ≈ $2.15B, 7D volume ≈ $94.8M), supporting efficient swaps via Jupiter.
+
+**Warnings:**
+1. High staking APY comes with volatile pair risk and potential price moves/impermanent loss.
+2. Borrow rates can spike (observed ~16.5%) and quickly erode net yield—monitor debtApy closely.
+3. Swap slippage, Jupiter routing fees and Kamino gas/tx costs on a $15k trade can meaningfully reduce first‑period returns.
+
+---
+*Generated on: 2025-10-25T08:07:09.833Z*
+*Generation Time: 59714ms*

@@ -1,0 +1,75 @@
+# Institutional Large Cap
+## Strategy: Institutional Kamino Diversified
+
+**Investment Amount:** $500,000
+**Risk Tolerance:** moderate
+**Expected APY:** 6%
+**Strategy Type:** multi_protocol
+**Capital Efficiency:** 70%
+
+## Description
+Diversified Kamino allocation across JupSOL, LSTs and INF with a USDC buffer; Jupiter used for all swaps and execution.
+
+## Protocols Used
+Kamino, Jupiter, Solana
+
+## Tokens Involved
+JupSOL, SOL, USDC, dSOL, picoSOL, INF
+
+## Execution Steps
+1. If not in USDC, swap initial capital to USDC via Jupiter using optimal routing and max slippage 0.30%.
+2. Allocate $250k (50%) to JupSOL: swap USDC→JupSOL on Jupiter (use deep liquidity/TWAP if needed) and deposit JupSOL into Kamino JupSOL markets (staking APY 7.020701).
+3. Within JupSOL allocation, create two sub-positions: 60% as JupSOL collateral borrowing SOL (SOL pair) and 40% borrowing USDC (USDC pair); target net carry (staking APY 7.02% minus debt APY ~5.65–6.14%).
+4. Allocate $100k (20%) to LST basket: split to dSOL and picoSOL via Jupiter, deposit to Kamino LST markets (dSOL staking APY 6.935042; picoSOL 6.899303) with conservative LTV 20–30%.
+5. Allocate $75k (15%) to INF tactical: swap USDC→INF via Jupiter, deposit to Kamino INF/SOL market and keep LTV ≤25% given INF debt APY can exceed staking (INF staking APY 6.856716; observed debt APY up to 7.11%).
+6. Keep $75k (15%) in USDC reserve on-chain for rebalances, margin calls, and opportunistic redeployments.
+7. Set automated risk controls: per-position max LTV 30%, liquidation buffer 10%, auto-repay triggers at LTV 25%, and daily rebalance checks.
+8. Use Jupiter for all unwind/rebalance swaps with conservative slippage (0.25–0.5%) and prefer TWAP for large orders against JupSOL liquidity (~$913M mkt cap, 7D vol ~$8.66M).
+
+## Risk Factors
+1. Negative carry if debt APY ≥ staking APY (monitor JupSOL debt 5.65–6.14% vs staking 7.020701%).
+2. Liquidity risk for LSTs with zero reported cap/volume (dSOL/picoSOL) causing slippage on large exits.
+3. Liquidation risk from SOL price moves when borrowing SOL; leverage capped but still material.
+4. Swap execution risk: routing slippage and price impact on large Jupiter swaps.
+5. Protocol risk: Kamino smart contract and oracle failures.
+
+## Monitoring Requirements
+1. Compare staking APY vs debt APY daily (watch JupSOL 7.020701 and INF debt spikes up to 7.109543).
+2. Track per-position LTV and trigger auto-repay if LTV > 25%.
+3. Watch JupSOL liquidity (7D vol ~$8.66M) and on-chain depth before large swaps.
+4. Alert on debt APY rises above staking APY or >0.5% week-over-week change.
+5. Monitor SOL price moves and total collateral value; alert on >10% drawdown.
+
+## Exit Strategy
+On target or breach, sequentially repay borrowed assets, withdraw collateral and swap to USDC via Jupiter with TWAP and slippage ≤0.5%. Prioritize using USDC reserve for repays to avoid forced liquidations.
+
+## Additional Details
+- **Complexity Level:** 7/10
+- **Time Horizon:** medium
+- **Gas Costs:** Solana tx fees negligible; expect Jupiter swap fees and price impact ~0.05–0.3% per large swap (~<$50 total per large execution if batched).
+- **Liquidity Requirements:** Requires deep JupSOL liquidity (market cap ~$913M, 7D vol ~$8.66M) for $250k swaps; use TWAP/split orders for LSTs with low volume.
+
+## Market Analysis
+**Market Conditions:** Kamino yields are clustered in the 6–7% range with JupSOL markets showing the deepest liquidity (market cap ~$913M, 7D vol ~$8.66M). Spreads are narrow and occasionally inverted (some debt APYs ≥ staking APYs), signaling compressed carry and increased monitoring needs.
+**Opportunity Score:** 62/100
+**Risk Score:** 48/100
+**Recommended Allocation:** Deploy $500k as: 50% JupSOL (SOL/USDC & SOL pairs), 20% diversified LST basket (dSOL/picoSOL), 15% small tactical exposure to INF, 15% USDC cash buffer for rebalancing and risk controls.
+
+**Alternatives:**
+1. Implement conservative looping with SOL collateral and capped leverage to boost net yield with strict LTV limits.
+2. Shift to Kamino stable pairs (USDC/USDT) for lower volatility and predictable yield if spreads compress further.
+3. Stake LSTs off-platform (mSOL/JitoSOL) and use Kamino only for opportunistic leverage when spreads widen.
+
+**Market Trends:**
+1. Staking APYs steady around ~6.9–7.0% across top LSTs over 7D.
+2. JupSOL dominates liquidity and should remain primary execution venue for large institutional flows.
+3. Debt APYs show occasional spikes above staking APYs, indicating short-term funding stress or demand for borrowed SOL.
+
+**Warnings:**
+1. Watch pairs where debt APY ≥ staking APY — these can produce negative carry if unchanged.
+2. Avoid large allocations to tokens with zero reported market cap/volume (dSOL/picoSOL) without liquidity stress tests.
+3. Enforce strict LTV, automated monitoring and liquidation buffers when borrowing SOL to prevent cascade liquidations during drawdowns.
+
+---
+*Generated on: 2025-10-25T08:11:00.796Z*
+*Generation Time: 56760ms*

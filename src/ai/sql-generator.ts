@@ -149,6 +149,8 @@ export async function generateSQLQuery(userQuery: string): Promise<SQLQuery> {
       4. NO complex CTEs, window functions, or advanced analytics
       5. NO complex aggregations or subqueries
       6. Focus on getting basic data that can be analyzed in the application layer
+      7. Use simple string comparisons, avoid complex parameter casting
+      8. Keep queries under 20 lines and very straightforward
       
       Important guidelines:
       1. Use simple JOINs to get pair data with tokens and markets
@@ -182,29 +184,29 @@ export async function generateSQLQuery(userQuery: string): Promise<SQLQuery> {
       Database Schema:
       ${DATABASE_SCHEMA}`,
       
-      prompt: `Generate a SQL query for this Kamino DeFi investment question: "${userQuery}"
+      prompt: `Generate a SIMPLE SQL query for this Kamino DeFi investment question: "${userQuery}"
       
-      Focus on:
-      - Finding the best Kamino lending opportunities
-      - Analyzing historical APY performance and trends
-      - SOL and LST (Liquid Staking Token) strategies
-      - Risk assessment based on token market cap and volume
-      - Strategy type analysis (directional vs sol strategies)
-      - Pair type filtering (volatile vs sol pairs)
-      - Time-based performance analysis (7D, 1M, 3M)
-      - Net APY calculations (staking APY - debt APY)
+      Generate a VERY SIMPLE query that:
+      - Gets basic pair data with tokens and APY information
+      - Uses simple WHERE clauses for filtering
+      - Avoids complex parameter casting or type conversions
+      - Focuses on getting raw data for analysis
       
-      Return a well-structured query with proper JOINs between:
-      - kamino_pairs (main trading pairs)
-      - tokens (collateral and debt token details)
-      - kamino_lending_markets (market information)
-      - kamino_historical_apy (APY data)
-      - kamino_filter_types (pair categorization)
+      Example simple query structure:
+      SELECT p.id, p."strategyType", c.symbol, d.symbol, h."stakingApy", h."debtApy"
+      FROM kamino_pairs p
+      JOIN tokens c ON p."collateralTokenId" = c.id
+      JOIN tokens d ON p."debtTokenId" = d.id
+      LEFT JOIN kamino_historical_apy h ON p.id = h."pairId"
+      WHERE h."timeRange" = '7D'
+      ORDER BY h."stakingApy" DESC
+      LIMIT 20;
       
       IMPORTANT: 
-      - Do NOT reference perps_markets table - perps data is handled separately via API
-      - Use $1, $2, $3 for parameters instead of :param_name syntax
-      - Use PostgreSQL syntax compatible with Prisma`,
+      - Keep it SIMPLE - no complex logic
+      - Use basic string comparisons only
+      - Avoid parameter casting
+      - Focus on getting data, not complex analysis`,
       
       schema: sqlQuerySchema,
     });

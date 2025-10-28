@@ -1,0 +1,75 @@
+# Diversified LST Farmer
+## Strategy: Balanced LST Diversifier
+
+**Investment Amount:** $25,000
+**Risk Tolerance:** moderate
+**Expected APY:** 6.4%
+**Strategy Type:** yield_farming
+**Capital Efficiency:** 65%
+
+## Description
+Split USDT into mSOL, JitoSOL and bbSOL via Jupiter and deposit on Kamino to earn LST staking APY without leverage. Moderate-risk, no-borrow approach focusing on capital preservation and steady yield.
+
+## Protocols Used
+Jupiter, Kamino
+
+## Tokens Involved
+USDT, mSOL, JitoSOL, bbSOL, USDC
+
+## Execution Steps
+1. Allocate $10,000 to mSOL, $10,000 to JitoSOL, $5,000 to bbSOL (reduce bbSOL if liquidity/data missing).
+2. Swap USDT→mSOL on Jupiter using optimal route, set slippage 0.5% and confirm price impact before execution.
+3. Swap USDT→JitoSOL on Jupiter with 0.5% slippage tolerance and best-route routing.
+4. Attempt USDT→bbSOL on Jupiter with 1% slippage; if bbSOL liquidity/data not sufficient, swap $5k→USDC instead.
+5. On Kamino, deposit mSOL into the mSOL market and enable as collateral (mSOL staking APY ~6.71% per 7d data).
+6. On Kamino, deposit JitoSOL into the JitoSOL market and enable as collateral (JitoSOL staking APY ~6.3247% per 7d data).
+7. Deposit bbSOL or USDC into the relevant Kamino market and enable collateral; do not borrow (no leverage) for moderate risk.
+8. Set Jupiter price alerts and Kamino position alerts; rebalance if any single LST moves >10% or APY shifts materially.
+
+## Risk Factors
+1. Market risk: LST values move with SOL price and can reduce USD value of staking rewards.
+2. bbSOL not present in provided Kamino data—confirm market depth before allocating.
+3. Swap risk: slippage and routing fees on Jupiter can reduce effective allocation.
+4. Protocol risk: smart-contract or Kamino-specific bugs may affect deposited funds.
+5. If you borrow later, variable debt APYs (SOL spikes noted) can cause liquidation risk.
+
+## Monitoring Requirements
+1. Watch mSOL staking APY ~6.65–6.71% and JitoSOL APY ~6.3247% (7‑day Kamino data).
+2. Check liquidity: JitoSOL cap ~$2.65B and vol ~$55.8M; mSOL cap ~$787.6M and vol ~$16.7M.
+3. Confirm bbSOL Kamino listing and depth before finalizing $5k allocation.
+4. Monitor Jupiter route price impact and cumulative slippage during swaps.
+5. Track Kamino collateral settings and any debt APY spikes if you choose to borrow later.
+
+## Exit Strategy
+Withdraw LSTs from Kamino and swap back to USDT via Jupiter using optimal routes and tight slippage tolerance; stagger exits if market depth is thin. Always disable collateral before withdrawing to avoid Kamino position issues.
+
+## Additional Details
+- **Complexity Level:** 4/10
+- **Time Horizon:** medium
+- **Gas Costs:** Small Solana fees per swap/deposit (~$0.5–$5 total) plus Jupiter swap fees and slippage.
+- **Liquidity Requirements:** Sufficient for mSOL and JitoSOL per data; bbSOL may be thin—verify orderbook before swapping.
+
+## Market Analysis
+**Market Conditions:** LST staking APYs for mSOL and JitoSOL are stable around ~6–6.7% over 7d with healthy trading volumes; JitoSOL shows materially larger market cap/liquidity than mSOL. No bbSOL data in the feed — verify before allocating.
+**Opportunity Score:** 72/100
+**Risk Score:** 38/100
+**Recommended Allocation:** Allocate 40% mSOL (~$10,000), 40% JitoSOL (~$10,000) and 20% bbSOL (~$5,000), reducing bbSOL if liquidity/data checks fail.
+
+**Alternatives:**
+1. Split 50/50 between mSOL and JitoSOL and keep 20% in Kamino USDC stable strategies to reduce volatility.
+2. Concentrate 60% mSOL / 40% JitoSOL and deploy a small 5–10% tranche to Kamino directional pairs for extra yield.
+3. Use a conservative approach: 70% JitoSOL, 30% mSOL if you prioritize liquidity and lower swap slippage.
+
+**Market Trends:**
+1. 7‑day staking APYs cluster ~6–6.7% for mSOL and ~6.32% for JitoSOL.
+2. JitoSOL market cap (~$2.65B) and volume (~$55.8M) >> mSOL (~$788M cap, ~$16.7M vol), indicating deeper liquidity.
+3. Occasional SOL debt APY spikes (one record ~20.5%) show lending-rate volatility and episodic demand for SOL borrowing.
+
+**Warnings:**
+1. bbSOL missing from provided Kamino data — confirm market cap, volume and Kamino pairs before allocating.
+2. LST allocations retain SOL price and validator/peg risks despite staking yields.
+3. Swapping USDT→LSTs can incur routing slippage and Jupiter fees — pre-check best route and slippage tolerance.
+
+---
+*Generated on: 2025-10-25T08:06:08.116Z*
+*Generation Time: 53419ms*

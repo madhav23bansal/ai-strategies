@@ -1,0 +1,75 @@
+# DeFi Veteran Optimizer
+## Strategy: Aggressive JLP + LST Leverage
+
+**Investment Amount:** $75,000
+**Risk Tolerance:** aggressive
+**Expected APY:** 35%
+**Strategy Type:** leverage_farming
+**Capital Efficiency:** 90%
+
+## Description
+Loop JLP for high carry and selectively lever JupSOL/dSOL for SOL exposure, keeping USDC buffer for margin. Use Jupiter for all swaps and Kamino for collateral/borrowing.
+
+## Protocols Used
+Kamino, Jupiter, Solana
+
+## Tokens Involved
+JLP, USDT, USDC, JupSOL, dSOL, SOL
+
+## Execution Steps
+1. Split $75k: 50% (~$37.5k) into JLP, 30% (~$22.5k) into JupSOL/dSOL, 20% (~$15k) USDC cash for margin.
+2. If needed, use Jupiter to swap SOL/USDC->JLP (set slippage 0.3–0.7%, prefer best route).
+3. Deposit JLP on Kamino as collateral and borrow USDT (prefer USDT due to lower observed debt APY ~6.03%) at target LTV 25–35%.
+4. Loop: buy more JLP with borrowed USDT and redeposit; limit to 1–3 loops (aim effective leverage 1.5–2x) maintaining 15–20% liquidation headroom.
+5. Swap portion to JupSOL/dSOL via Jupiter (slippage 0.5–1%), deposit on Kamino, borrow SOL conservatively at 15–25% LTV, redeploy into JupSOL for moderate leverage.
+6. Keep $15k USDC as margin/hedge and for repaying if debt APY spikes (avoid borrowing USDC if its debt APY >10%, note an observed USDC outlier ~16.524139%).
+7. Automate on-chain alerts to unwind loops if collateral falls >12% or debt APY spikes; rebalance weekly.
+8. When adjusting, use Jupiter for swaps back to USDC/SOL optimizing routes and minimizing slippage.
+
+## Risk Factors
+1. High liquidation risk from multi-loop leverage and SOL volatility.
+2. Debt APY spike risk (example JLP->USDC observed up to 16.524139%).
+3. Concentration risk in JLP despite large staking APY (49.85867%).
+4. Smart-contract and unverified collateral risk for small LSTs (avoid unverified tokens).
+5. Swap slippage and route fragmentation reducing net carry.
+
+## Monitoring Requirements
+1. Kamino debt APYs (watch USDC/USDT debt; prefer USDT ~6.03%).
+2. Collateral prices and effective LTVs continuously.
+3. Pool liquidity on Jupiter for JLP and JupSOL to limit slippage.
+4. Overall utilization and Kamino health factor daily.
+5. Weekly realized net carry vs cumulative borrowing cost.
+
+## Exit Strategy
+Unwind loops by selling collateral via Jupiter to repay borrowed USDT/ SOL, prioritizing repaying highest APY debt first. Gradually deleverage if collateral drops >12% or debt APY rises materially.
+
+## Additional Details
+- **Complexity Level:** 9/10
+- **Time Horizon:** medium
+- **Gas Costs:** Low on Solana; estimate $1–$10 per loop including swaps and Kamino txs depending on number of transactions and slippage.
+- **Liquidity Requirements:** Requires deep Jupiter liquidity for JLP/JupSOL; avoid tiny/unverified LST pools with zero volume.
+
+## Market Analysis
+**Market Conditions:** JLP directional pairs present outsized 7D staking APY (~49.86%) vs stablecoin debt (~6% typical, one USDC outlier ~16.5%), while mainstream LSTs (JupSOL, dSOL, pSOL, etc.) cluster at ~6.7–7.0% staking with borrowing costs ~5.6–6.2%; several small LSTs show zero market data/unverified status.
+**Opportunity Score:** 78/100
+**Risk Score:** 62/100
+**Recommended Allocation:** 50% JLP directional looping (moderate leverage vs USDT/USDC), 30% JupSOL/dSOL leveraged SOL strategies, 20% USDC cash/low-leverage LSTs as hedge.
+
+**Alternatives:**
+1. Loop JLP collateral borrowing USDT to capture ~49.9% staking vs ~6% debt for high net carry.
+2. SOL-focused leverage using JupSOL collateral (staking ~7%, borrow SOL ~6%) for directional SOL exposure.
+3. Conservative USDC/USDT Kamino stable pairs or unleveraged LST staking to minimize liquidation risk.
+
+**Market Trends:**
+1. Very large positive carry available in JLP (staking ~49.86% vs typical debt ~6%).
+2. Main LSTs’ staking APYs sit near 6.7–7.0% while debt APYs ~5.6–6.2% compress net carry for simple loops.
+3. Several LST collaterals are unverified or show zero market volume, indicating liquidity/contract risk.
+
+**Warnings:**
+1. Watch debt APY spikes (example JLP USDC ~16.5%) which can reverse carry quickly.
+2. Avoid or size tiny positions in unverified zero-volume collaterals (dSOL, picoSOL, CGNTSOL, PSOL).
+3. Leverage materially increases liquidation risk — maintain healthy margin buffers and monitor utilization.
+
+---
+*Generated on: 2025-10-25T08:11:54.611Z*
+*Generation Time: 51812ms*

@@ -1,0 +1,75 @@
+# Small Budget Starter
+## Strategy: Conservative SOL → LST
+
+**Investment Amount:** $1,000
+**Risk Tolerance:** conservative
+**Expected APY:** 6.9%
+**Strategy Type:** yield_farming
+**Capital Efficiency:** 75%
+
+## Description
+Convert most SOL to an LST and deposit to Kamino for ~6.9% staking yield; avoid borrowing/looping. Keep a small SOL buffer for fees and learning.
+
+## Protocols Used
+Kamino, Jupiter
+
+## Tokens Involved
+SOL, JupSOL, dSOL
+
+## Execution Steps
+1. Keep $200 (20%) SOL as gas/learning buffer and for quick exits.
+2. Convert $800 SOL → JupSOL (preferred) or dSOL via Jupiter; JupSOL staking APY = 7.02%, dSOL ≈ 6.94%.
+3. On Jupiter, pick best route, set slippage ≤1%, and review estimated fee before swap.
+4. Approve/execute swap and confirm JupSOL/dSOL receipt in your wallet.
+5. Open Kamino and deposit JupSOL or dSOL into the Main Market SOL strategy (no leverage).
+6. Confirm deposit and verify your Kamino position and claimed staking APY (~6.8%–7.0%).
+7. Do not borrow/loop — debt APYs (~5.8%–7.4%) negate benefit now.
+8. Recheck weekly and compound manually or reinvest earnings monthly.
+
+## Risk Factors
+1. Smart-contract risk on Kamino and LST providers.
+2. Swap slippage and low liquidity can reduce capital for small trades.
+3. Impermanent loss not applicable but LST peg/discount risk exists.
+4. Low net benefit if you mistakenly use leverage (debt APY ≈ staking APY).
+5. Price volatility of SOL affects USD value of yield.
+
+## Monitoring Requirements
+1. Kamino staking APY for your chosen pair (JupSOL 7.02%, dSOL ~6.94%).
+2. Jupiter swap quotes and slippage before each trade.
+3. Wallet balance of SOL to keep >0.05 SOL for fees.
+4. Kamino position health and any protocol updates/announcements.
+5. Weekly USD value of holdings to track realized performance.
+
+## Exit Strategy
+Withdraw LST from Kamino back to your wallet, swap JupSOL/dSOL → SOL on Jupiter (keep slippage ≤1%), and keep $200 as buffer; exit anytime. Consider waiting >30 days to avoid frequent fee drag.
+
+## Additional Details
+- **Complexity Level:** 2/10
+- **Time Horizon:** medium
+- **Gas Costs:** Estimated total swap+deposit fees < $1 typical on Solana; account for small Jupiter fees and slippage.
+- **Liquidity Requirements:** Use Jupiter's best route and keep slippage ≤1%; avoid swapping >$800 in a single low-liquidity pool.
+
+## Market Analysis
+**Market Conditions:** SOL-focused Kamino pairs show staking APYs clustered ~6.8%–7.0% (top: JupSOL ~7.02%, dSOL/picoSOL ~6.9%). Debt APYs are similar (~5.8%–7.4%), so borrowing/looping gives little clear edge right now.
+**Opportunity Score:** 60/100
+**Risk Score:** 35/100
+**Recommended Allocation:** Convert ~80% of $1,000 to an LST like dSOL or JupSOL and deposit in a Kamino SOL strategy with no leverage, keep ~20% as SOL for liquidity/gas and learning.
+
+**Alternatives:**
+1. Stake SOL off-chain via a custodial/LST provider (lowest complexity, lower protocol risk).
+2. Use Kamino but avoid borrowing — convert to LST and take straight staking APY (~6.8%–7.0%).
+3. Park part in USDC stable Kamino pairs for capital preservation if you prefer lower volatility.
+
+**Market Trends:**
+1. Staking APYs across SOL LSTs are tightly clustered around ~6.8%–7.0%.
+2. Debt APYs are nearly as high as staking APYs, reducing benefit from leveraged looping.
+3. LST collateral (JupSOL, dSOL, picoSOL) dominates available SOL strategies.
+
+**Warnings:**
+1. Looping/borrowing is unattractive now because debt APY ≈ staking APY — you may not net positive after fees.
+2. With $1,000, fees, slippage and minimums materially impact returns, so favour simple deposits.
+3. LST and Kamino smart-contract risk exists; use small initial amounts while you learn.
+
+---
+*Generated on: 2025-10-25T08:10:02.033Z*
+*Generation Time: 111162ms*

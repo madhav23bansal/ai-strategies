@@ -1,0 +1,73 @@
+# Retirement Income Seeker
+## Strategy: Conservative USDC Yield
+
+**Investment Amount:** $100,000
+**Risk Tolerance:** conservative
+**Expected APY:** 3.5%
+**Strategy Type:** stables
+**Capital Efficiency:** 75%
+
+## Description
+Low-volatility monthly income via Kamino USDC lending and stable pools. Preserve capital while earning steady yield.
+
+## Protocols Used
+Kamino, Jupiter, Solana
+
+## Tokens Involved
+USDC, USDT, USDG, JLP
+
+## Execution Steps
+1. Verify live Kamino USDC lending APY and USDC/USDT stable-pair APY on Kamino before committing.
+2. No Jupiter swap required — you already hold USDC (skip swap step).
+3. Allocate $80,000 to the Kamino USDC single-sided lending market for steady interest.
+4. Allocate $15,000 to a Kamino USDC/USDT stable pair (stable LP) to capture fees + extra APY.
+5. Keep $5,000 USDC as on-chain cash for monthly distributions, fees, and rebalances.
+6. Enable auto-compound where available and rebalance positions monthly; verify vault health each rebalance.
+
+## Risk Factors
+1. Smart-contract risk in Kamino vaults and strategy contracts.
+2. APY compression or sudden rate drops — confirm live rates before deposit.
+3. Stablecoin peg risk (USDC/USDT) and protocol-level stablecoin exposure.
+4. Liquidity risk during large withdrawals causing temporary slippage.
+5. Operational risk from misconfigured auto-compound or stale approvals.
+
+## Monitoring Requirements
+1. Daily Kamino APY for USDC lending and USDC/USDT pair.
+2. TVL and recent withdrawal activity in chosen Kamino vaults.
+3. Stablecoin peg status and on-chain USDC/USDT price spread.
+4. Monthly realized yield net of fees and gas.
+5. Jupiter routing liquidity and slippage if future swaps needed.
+
+## Exit Strategy
+If net APY falls >50% of expected or vault TVL/health deteriorates, withdraw and move to core Kamino lending or on-chain USDC cash. Use Jupiter to convert any non-USDC holdings back to USDC with a conservative slippage cap.
+
+## Additional Details
+- **Complexity Level:** 3/10
+- **Time Horizon:** medium
+- **Gas Costs:** Minimal Solana fees; estimate <$10 per deposit/withdrawal roundtrip, plus Jupiter fees/slippage if swapping.
+- **Liquidity Requirements:** Choose high‑TVL Kamino stable markets to handle $80k+ without meaningful slippage.
+
+## Market Analysis
+**Market Conditions:** Kamino stablepair APY data was unavailable in the provided dataset; typical on-chain stable strategies currently show compressed yields but steady demand for USDC liquidity. Expect low but reliable monthly distributions if you target core USDC/USDT stable pairs or Kamino stable lending markets.
+**Opportunity Score:** 70/100
+**Risk Score:** 15/100
+**Recommended Allocation:** Allocate 80% ($80k) to low-volatility Kamino stable pairs or Kamino USDC lending, 15% ($15k) to ultra-short on-chain cash (stable staking) for liquidity, 5% ($5k) as reserve for gas/slippage and rebalancing.
+
+**Alternatives:**
+1. Deposit USDC into Kamino stable lending markets for passive interest with minimal impermanent loss risk.
+2. Provide liquidity to USDC/USDT Kamino stable pools for moderate extra yield with low volatility exposure.
+3. Use Jupiter to convert a small portion to USDG or other Kamino-listed stable alternatives if they show better APY after fees.
+
+**Market Trends:**
+1. Stablecoin yields have been compressing as TVL increased and borrowing demand softened.
+2. Investor demand favors single-sided stable lending over volatile pair LPs for predictable monthly income.
+3. On-chain rate moves respond quickly to macro liquidity changes, so short-term APY swings can occur despite low token volatility.
+
+**Warnings:**
+1. Provided Kamino APY data was missing — verify live APYs before committing funds.
+2. Smart-contract and protocol risk remain; prefer audited Kamino vaults and limit exposure per vault.
+3. Withdrawals or rebalances can incur slippage/fees; keep a 3–5% liquidity buffer for monthly distributions.
+
+---
+*Generated on: 2025-10-25T08:12:44.875Z*
+*Generation Time: 48261ms*
